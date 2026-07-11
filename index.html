@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🆚 Testspielplaner</title>
+<meta name="theme-color" content="#1a56a0" />
+<link rel="stylesheet" href="style.css?v=1.0" />
+</head>
+<body>
+
+<header>
+  <h1>🆚 Testspielplaner <span class="version-badge version-badge-link" id="version-badge" role="button" tabindex="0" title="Versionshistorie ansehen"></span></h1>
+  <a href="https://tecko1985.github.io/ToolsUebersicht/" class="back-to-dashboard">← Zurück zum Dashboard</a>
+  <div class="header-right">
+    <span class="header-user" id="header-user"></span>
+    <img class="header-logo" src="logo.png" alt="1. SC 1911 e.V. Heilbad Heiligenstadt" />
+  </div>
+</header>
+
+<!-- Verbindungs-Screen -->
+<div class="connect-screen" id="connect-screen">
+  <div class="card" id="cloud-login-section">
+    <h2>Anmeldung erforderlich</h2>
+    <p class="muted">
+      Deine Reservierungen liegen in der Vereins-Nextcloud. Melde dich einmalig in der
+      <strong>Tools-Übersicht</strong> an – danach wird diese Seite automatisch
+      geladen, ganz ohne Zugangsdaten oder App-Passwort auf diesem Gerät.
+      Funktioniert auch mobil.
+    </p>
+    <div class="btn-row" style="justify-content:flex-start;">
+      <a class="btn" href="https://tecko1985.github.io/ToolsUebersicht/">Zur Tools-Übersicht &amp; anmelden</a>
+    </div>
+    <p class="muted" id="cloud-error" style="display:none; color:#c0392b; margin-top:12px;"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app-shell" style="display:none;">
+  <nav>
+    <button data-tab="planen" class="active">Planen</button>
+    <button data-tab="verwaltung" class="admin-only" style="margin-left:auto;">Verwaltung</button>
+    <button data-tab="einstellungen" class="admin-only">Einstellungen</button>
+  </nav>
+  <main>
+
+    <section class="tab-section active" id="tab-planen">
+
+      <div class="card reminder-banner" id="reminder-banner" style="display:none;"></div>
+
+      <div class="card">
+        <h2>Freien Platz finden</h2>
+        <p class="muted">
+          Zeitraum angeben (z. B. Montag bis Donnerstag) — freie Lücken erscheinen als klickbare
+          Vorschläge und füllen die Anfrage unten automatisch aus. Trainingszeiten aus der
+          Platzbelegung und bestehende Reservierungen werden berücksichtigt.
+        </p>
+        <div class="form-grid">
+          <div class="form-field"><label>Von (Datum)</label><input type="date" id="s-von" /></div>
+          <div class="form-field"><label>Bis (Datum)</label><input type="date" id="s-bis" /></div>
+          <div class="form-field"><label>Uhrzeit von</label><input type="time" id="s-zeit-von" /></div>
+          <div class="form-field"><label>Uhrzeit bis</label><input type="time" id="s-zeit-bis" /></div>
+          <div class="form-field"><label>Feldgröße</label><select id="s-feldgroesse"></select></div>
+        </div>
+        <div class="btn-row" style="justify-content:flex-start;">
+          <button type="button" class="btn" id="btn-suche">Freie Slots suchen</button>
+        </div>
+        <div id="suche-ergebnis"></div>
+      </div>
+
+      <div class="card" id="anfrage-card">
+        <h2>Neue Anfrage</h2>
+        <p class="muted">
+          Reserviert wird immer ein konkreter Termin. Ohne Gegner reservierst du nur den Platz —
+          den Gegner trägst du nach der Genehmigung nach. Jede Anfrage muss von einem Admin
+          genehmigt werden.
+        </p>
+        <p class="kontingent-info muted" id="kontingent-info"></p>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Art</label>
+            <select id="f-typ">
+              <option value="testspiel" selected>Testspiel</option>
+              <option value="leistungsvergleich">Leistungsvergleich</option>
+            </select>
+          </div>
+          <div class="form-field" id="mannschaft-field"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label>Datum</label><input type="date" id="f-datum" /></div>
+          <div class="form-field"><label>Von</label><input type="time" id="f-von" /></div>
+          <div class="form-field"><label>Bis</label><input type="time" id="f-bis" /></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label>Feldgröße</label><select id="f-feldgroesse"></select></div>
+          <div class="form-field"><label>Platz</label><select id="f-platz"></select></div>
+          <div class="form-field"><label>Gegner (optional)</label><input type="text" id="f-gegner" placeholder="noch offen — später eintragbar" /></div>
+        </div>
+        <div class="form-grid lv-only">
+          <div class="form-field"><label>Anzahl Spiele</label><input type="number" id="f-anzahl-spiele" min="1" step="1" /></div>
+          <div class="form-field"><label>Minuten pro Spiel</label><input type="number" id="f-minuten" min="1" step="1" /></div>
+        </div>
+        <div class="form-field" style="margin-top:4px;">
+          <label>Notiz (optional)</label>
+          <textarea id="f-notiz" rows="2" placeholder="z. B. Ansprechpartner beim Gegner, Besonderheiten"></textarea>
+        </div>
+        <p class="form-warning" id="form-warning" style="display:none;"></p>
+        <p class="muted" id="form-error" style="display:none; color:#c0392b; margin-top:10px;"></p>
+        <div class="btn-row" style="justify-content:flex-end; margin-top:16px;">
+          <button type="button" class="btn success" id="btn-submit">Anfrage absenden</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <h2>Meine Reservierungen</h2>
+        </div>
+        <div class="empty-state" id="meine-empty" style="display:none;">Noch keine Reservierungen.</div>
+        <div id="meine-rows"></div>
+      </div>
+
+      <div class="card">
+        <h3>Konto</h3>
+        <div class="btn-row" style="justify-content:flex-start;">
+          <a class="btn secondary small" href="https://tecko1985.github.io/ToolsUebersicht/">Zur Tools-Übersicht (an-/abmelden)</a>
+        </div>
+      </div>
+
+      <div class="card" id="changelog-panel">
+        <h3>Versionshistorie <span class="version-badge" id="version-badge-2"></span></h3>
+        <div id="changelog-list"></div>
+      </div>
+
+    </section>
+
+    <section class="tab-section" id="tab-verwaltung">
+
+      <div class="card">
+        <div class="card-header-row">
+          <h2>Reservierungen verwalten</h2>
+          <select id="admin-status-filter">
+            <option value="alle">Alle</option>
+            <option value="angefragt">Angefragt</option>
+            <option value="genehmigt">Genehmigt</option>
+            <option value="vereinbart">Vereinbart</option>
+            <option value="abgelehnt">Abgelehnt</option>
+            <option value="freigegeben">Freigegeben</option>
+          </select>
+        </div>
+        <div class="empty-state" id="verwaltung-empty" style="display:none;">Keine Reservierungen für diesen Filter.</div>
+        <div id="verwaltung-rows"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <h2>Export</h2>
+        </div>
+        <p class="muted">Export der aktuell gefilterten Reservierungen (siehe Filter oben).</p>
+        <div class="btn-row" style="justify-content:flex-start;">
+          <button type="button" class="btn secondary" id="btn-export-text">Export als Text</button>
+          <button type="button" class="btn secondary" id="btn-export-pdf">Export als PDF</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="tab-section" id="tab-einstellungen">
+
+      <div class="card">
+        <h2>Einstellungen</h2>
+        <div class="form-field" style="max-width:340px;">
+          <label>Kontingent pro Trainer und Saison (leer = kein Limit)</label>
+          <input type="number" id="e-kontingent" min="0" step="1" placeholder="z. B. 4" />
+        </div>
+        <p class="muted" style="margin-top:6px;">
+          Zählt Testspiele und Leistungsvergleiche zusammen (Status angefragt/genehmigt/vereinbart),
+          Saison = 01.07.–30.06., zugeordnet über das Spieldatum.
+        </p>
+
+        <h3 style="margin-top:22px;">Plätze</h3>
+        <p class="muted">
+          Feldgrößen steuern, welche Plätze die Slot-Suche anbietet. Die Platzbelegung-Zuordnung
+          legt fest, welche Trainings-Teilplätze diesen Platz blockieren.
+        </p>
+        <div id="einstellungen-plaetze"></div>
+        <div class="btn-row" style="justify-content:flex-start; margin-top:10px;">
+          <button type="button" class="btn secondary small" id="btn-add-platz">+ Platz hinzufügen</button>
+        </div>
+
+        <p class="muted" id="einstellungen-status" style="display:none; margin-top:10px;"></p>
+        <div class="btn-row" style="justify-content:flex-end; margin-top:16px;">
+          <button type="button" class="btn success" id="btn-save-einstellungen">Speichern</button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- Druckbereich (nur für PDF-Export sichtbar) -->
+<div id="print-area"><div id="print-content"></div></div>
+
+<script src="config.js?v=1.0"></script>
+<script src="db.js?v=1.0"></script>
+<script src="app.js?v=1.0"></script>
+</body>
+</html>
