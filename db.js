@@ -58,3 +58,10 @@ async function gatewaySave(dataObj) {
 async function fetchMe() {
   return gatewayRequest({ action: "me", app: GATEWAY_APP_ID });
 }
+
+// Liefert {users:[{username,displayName}], groups:[{id,name}]} — für die
+// Trainer-Freigabeliste in den Einstellungen, jeder eingeloggte Nutzer, keine
+// sensiblen Felder.
+async function fetchDirectory() {
+  return gatewayRequest({ action: "list-directory" });
+}

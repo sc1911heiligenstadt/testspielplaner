@@ -277,6 +277,17 @@ button.btn:disabled { opacity: 0.6; cursor: default; }
 .pe-checkbox { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .pe-checkbox input { cursor: pointer; }
 
+.tz-block summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+.tz-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.tz-row:last-child { border-bottom: none; }
+.tz-row .tz-kontingent {
+  width: 100px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;
+}
+.tz-row .tz-kontingent:disabled { background: var(--gray); color: var(--muted); }
+
 /* ---------- Druckansicht (PDF-Export via window.print) ---------- */
 
 #print-area { display: none; }

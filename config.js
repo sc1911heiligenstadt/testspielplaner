@@ -28,6 +28,17 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
+    version: "1.3",
+    groups: [
+      {
+        title: "Verwaltung & Einstellungen (nur Admins)",
+        items: [
+          "Trainer-Freigaben statt einem globalen Kontingent: aufklappbare Liste aller Trainer, je Checkbox „darf anfragen“ + eigenes Saison-Kontingent. Nicht freigeschaltete Trainer sehen im Planen-Tab statt des Formulars einen Hinweis."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.2",
     groups: [
       {

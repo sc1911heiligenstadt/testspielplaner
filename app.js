@@ -1,10 +1,13 @@
-let appData = { einstellungen: { kontingentProSaison: null }, plaetze: [], reservierungen: [] };
+let appData = { einstellungen: { trainerZugriff: {} }, plaetze: [], reservierungen: [] };
 let currentUsername = null;
 let currentIsAdmin = false;
 let currentVorname = null;
 let currentNachname = null;
 let currentMannschaften = [];
 let currentStatusFilter = "alle";
+// Trainer-Verzeichnis für die Freigabeliste in Einstellungen — lazy geladen
+// beim ersten Öffnen des Tabs, danach für die Session gecacht.
+let trainerDirectory = null;
 
 const RESERVIERUNG_STATUS = [
   { id: "angefragt", label: "Angefragt" },
@@ -101,7 +104,9 @@ function deriveNameFromUsername(username) {
 function normalizeAppData(data) {
   const d = data && typeof data === "object" ? data : {};
   if (!d.einstellungen || typeof d.einstellungen !== "object") d.einstellungen = {};
-  if (typeof d.einstellungen.kontingentProSaison !== "number") d.einstellungen.kontingentProSaison = null;
+  if (!d.einstellungen.trainerZugriff || typeof d.einstellungen.trainerZugriff !== "object") {
+    d.einstellungen.trainerZugriff = {};
+  }
   if (!Array.isArray(d.plaetze) || !d.plaetze.length) {
     d.plaetze = DEFAULT_PLAETZE.map((p) => ({ ...p, feldgroessen: p.feldgroessen.slice() }));
   }
@@ -164,10 +169,25 @@ async function saveWithConflictRetry(mutate) {
   }
 }
 
-// ---------- Kontingent ----------
+// ---------- Trainer-Freigabe & Kontingent ----------
 
-function kontingentLimit(data) {
-  const v = data.einstellungen ? data.einstellungen.kontingentProSaison : null;
+// Freigabe-Eintrag eines Trainers (nur vorhanden, wenn ein Admin ihn je gesetzt hat).
+function trainerZugriffFor(data, username) {
+  const z = data.einstellungen && data.einstellungen.trainerZugriff ? data.einstellungen.trainerZugriff[username] : null;
+  return z && typeof z === "object" ? z : null;
+}
+
+// Fail-closed: ohne expliziten Eintrag darf ein Trainer nicht anfragen.
+// Admins sind immer erlaubt (gleiche Konvention wie der Gateway-Bypass).
+function darfAnfragen(data, username, isAdmin) {
+  if (isAdmin) return true;
+  const z = trainerZugriffFor(data, username);
+  return !!(z && z.erlaubt);
+}
+
+function kontingentLimit(data, username) {
+  const z = trainerZugriffFor(data, username);
+  const v = z ? z.kontingent : null;
   return (typeof v === "number" && v > 0) ? v : null;
 }
 
@@ -182,7 +202,7 @@ function verbrauchtesKontingent(data, username, saisonKey) {
 function renderKontingentInfo() {
   const el = document.getElementById("kontingent-info");
   const saison = saisonKeyOf(localDateIso());
-  const limit = kontingentLimit(appData);
+  const limit = kontingentLimit(appData, currentUsername);
   const verbraucht = verbrauchtesKontingent(appData, currentUsername, saison);
   if (limit == null) {
     el.textContent = `Saison ${saison}: ${verbraucht} Reservierung${verbraucht === 1 ? "" : "en"} — kein Kontingent-Limit gesetzt.`;
@@ -316,6 +336,10 @@ function resetAnfrageForm() {
 
 async function submitReservierung() {
   showFormError("");
+  if (!darfAnfragen(appData, currentUsername, currentIsAdmin)) {
+    showFormError("Du bist für die Testspielplanung nicht freigeschaltet.");
+    return;
+  }
   const typ = document.getElementById("f-typ").value;
   const datum = document.getElementById("f-datum").value;
   const von = document.getElementById("f-von").value;
@@ -340,7 +364,7 @@ async function submitReservierung() {
   }
 
   const saison = saisonKeyOf(datum);
-  const limit = kontingentLimit(appData);
+  const limit = kontingentLimit(appData, currentUsername);
   if (limit != null && verbrauchtesKontingent(appData, currentUsername, saison) >= limit) {
     showFormError(`Dein Kontingent für die Saison ${saison} ist erschöpft (${limit} von ${limit}).`); return;
   }
@@ -377,17 +401,22 @@ async function submitReservierung() {
       vereinbartAm: null,
       freigegebenAm: null
     };
-    // Kontingent-Recheck IM mutate: beim Konflikt-Retry läuft die Prüfung auf dem
-    // frischen Remote-Stand — hat der Trainer parallel woanders angefragt, wird
-    // hier nicht über das Limit hinaus gebucht.
-    let blocked = false;
+    // Freigabe- und Kontingent-Recheck IM mutate: beim Konflikt-Retry läuft die
+    // Prüfung auf dem frischen Remote-Stand — hat ein Admin die Freigabe inzwischen
+    // entzogen oder der Trainer parallel woanders angefragt, wird das hier gefangen.
+    let blocked = null; // null | "zugriff" | "kontingent"
     await saveWithConflictRetry((data) => {
-      blocked = false;
-      const lim = kontingentLimit(data);
-      if (lim != null && verbrauchtesKontingent(data, currentUsername, saison) >= lim) { blocked = true; return; }
+      blocked = null;
+      if (!darfAnfragen(data, currentUsername, currentIsAdmin)) { blocked = "zugriff"; return; }
+      const lim = kontingentLimit(data, currentUsername);
+      if (lim != null && verbrauchtesKontingent(data, currentUsername, saison) >= lim) { blocked = "kontingent"; return; }
       data.reservierungen.push(res);
     });
-    if (blocked) {
+    if (blocked === "zugriff") {
+      showFormError("Du bist für die Testspielplanung nicht freigeschaltet — die Anfrage wurde nicht gespeichert.");
+      return;
+    }
+    if (blocked === "kontingent") {
       showFormError(`Dein Kontingent für die Saison ${saison} ist erschöpft — die Anfrage wurde nicht gespeichert.`);
       return;
     }
@@ -584,10 +613,42 @@ function platzEditorHtml(platz) {
     </div>`;
 }
 
-function renderEinstellungen() {
-  const kont = appData.einstellungen.kontingentProSaison;
-  document.getElementById("e-kontingent").value = (typeof kont === "number" && kont > 0) ? kont : "";
+// Eine Zeile der Trainer-Freigabeliste: Checkbox "darf anfragen" + eigenes
+// Saison-Kontingent (leer = kein Limit, gleiche Konvention wie vorher global).
+function trainerZugriffRowHtml(user) {
+  const saved = trainerZugriffFor(appData, user.username);
+  const erlaubt = !!(saved && saved.erlaubt);
+  const kontingent = saved && typeof saved.kontingent === "number" ? saved.kontingent : "";
+  return `
+    <div class="tz-row" data-username="${escapeHtml(user.username)}">
+      <label class="pe-checkbox"><input type="checkbox" class="tz-erlaubt" ${erlaubt ? "checked" : ""} /> ${escapeHtml(user.displayName || user.username)}</label>
+      <input type="number" class="tz-kontingent" min="1" step="1" placeholder="kein Limit" value="${escapeHtml(kontingent)}" ${erlaubt ? "" : "disabled"} />
+    </div>`;
+}
+
+// Lazy laden + für die Session cachen (nur Admins erreichen den Einstellungen-Tab,
+// der Aufruf lohnt sich also nicht schon beim App-Start für jeden Nutzer).
+async function ensureTrainerDirectory() {
+  if (trainerDirectory) return trainerDirectory;
+  try {
+    const res = await fetchDirectory();
+    const users = Array.isArray(res.users) ? res.users : [];
+    trainerDirectory = users.slice().sort((a, b) =>
+      (a.displayName || a.username).localeCompare(b.displayName || b.username, "de"));
+  } catch (e) {
+    trainerDirectory = [];
+  }
+  return trainerDirectory;
+}
+
+async function renderEinstellungen() {
   document.getElementById("einstellungen-plaetze").innerHTML = appData.plaetze.map(platzEditorHtml).join("");
+  const tzList = document.getElementById("trainer-zugriff-list");
+  tzList.innerHTML = `<p class="muted">Lade Trainerliste…</p>`;
+  const users = await ensureTrainerDirectory();
+  tzList.innerHTML = users.length
+    ? users.map(trainerZugriffRowHtml).join("")
+    : `<p class="muted">Trainerliste konnte nicht geladen werden.</p>`;
 }
 
 function showEinstellungenStatus(msg, isError) {
@@ -598,9 +659,6 @@ function showEinstellungenStatus(msg, isError) {
 }
 
 function collectEinstellungenFromForm() {
-  const kontRaw = document.getElementById("e-kontingent").value.trim();
-  const kontNum = Math.floor(Number(kontRaw));
-  const kontingent = kontRaw !== "" && Number.isFinite(kontNum) && kontNum > 0 ? kontNum : null;
   const plaetze = Array.from(document.querySelectorAll("#einstellungen-plaetze .platz-editor")).map((el) => {
     const id = el.dataset.platzId;
     return {
@@ -610,20 +668,33 @@ function collectEinstellungenFromForm() {
       feldgroessen: Array.from(el.querySelectorAll(".pe-feldgroesse:checked")).map((c) => c.dataset.fg)
     };
   });
-  return { kontingent, plaetze };
+  const tzRows = Array.from(document.querySelectorAll("#trainer-zugriff-list .tz-row"));
+  const trainerZugriff = {};
+  tzRows.forEach((row) => {
+    const erlaubt = row.querySelector(".tz-erlaubt").checked;
+    if (!erlaubt) return; // nicht angehakt = kein Eintrag = fail-closed gesperrt
+    const kontRaw = row.querySelector(".tz-kontingent").value.trim();
+    const kontNum = Math.floor(Number(kontRaw));
+    const kontingent = kontRaw !== "" && Number.isFinite(kontNum) && kontNum > 0 ? kontNum : null;
+    trainerZugriff[row.dataset.username] = { erlaubt: true, kontingent };
+  });
+  // Zeilen vorhanden ⇒ Trainerliste war geladen, trainerZugriff darf ersetzt werden.
+  // Noch nicht geladen (z. B. sehr schnelles Klicken) ⇒ nichts überschreiben, statt
+  // versehentlich alle bestehenden Freigaben zu löschen.
+  return { plaetze, trainerZugriff, trainerZugriffLoaded: tzRows.length > 0 };
 }
 
 async function saveEinstellungen() {
   showEinstellungenStatus("");
-  const { kontingent, plaetze } = collectEinstellungenFromForm();
+  const { plaetze, trainerZugriff, trainerZugriffLoaded } = collectEinstellungenFromForm();
   if (plaetze.some((p) => !p.name)) { showEinstellungenStatus("Bitte jedem Platz einen Namen geben.", true); return; }
   if (!plaetze.length) { showEinstellungenStatus("Mindestens ein Platz muss vorhanden sein.", true); return; }
   const btn = document.getElementById("btn-save-einstellungen");
   btn.disabled = true;
   try {
     await saveWithConflictRetry((data) => {
-      data.einstellungen.kontingentProSaison = kontingent;
       data.plaetze = plaetze;
+      if (trainerZugriffLoaded) data.einstellungen.trainerZugriff = trainerZugriff;
     });
     showEinstellungenStatus("Gespeichert ✓");
     renderEinstellungen();
@@ -830,6 +901,13 @@ async function init() {
 
   document.getElementById("btn-add-platz").addEventListener("click", addPlatzEditor);
   document.getElementById("btn-save-einstellungen").addEventListener("click", saveEinstellungen);
+  document.getElementById("trainer-zugriff-list").addEventListener("change", (e) => {
+    const check = e.target.closest(".tz-erlaubt");
+    if (!check) return;
+    const kont = check.closest(".tz-row").querySelector(".tz-kontingent");
+    kont.disabled = !check.checked;
+    if (!check.checked) kont.value = "";
+  });
   document.getElementById("einstellungen-plaetze").addEventListener("click", (e) => {
     const btn = e.target.closest(".pe-remove");
     if (!btn) return;
@@ -868,6 +946,10 @@ async function init() {
     // Admin-UI rein CSS-reaktiv über die Body-Klasse (kein isAdmin im Render-HTML,
     // siehe startApp-Timing-Gotcha der Geschwister-Apps).
     document.body.classList.toggle("is-admin", currentIsAdmin);
+    // Nicht freigeschaltete Trainer sehen statt des Anfrage-Formulars nur den Hinweis.
+    const erlaubt = darfAnfragen(appData, currentUsername, currentIsAdmin);
+    document.getElementById("anfrage-card").style.display = erlaubt ? "" : "none";
+    document.getElementById("anfrage-gesperrt-hinweis").style.display = erlaubt ? "none" : "block";
     startApp();
     renderHeaderUser();
     renderMannschaftField();
