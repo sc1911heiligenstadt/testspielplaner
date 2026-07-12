@@ -369,6 +369,8 @@ async function submitReservierung() {
       notiz,
       status: "angefragt",
       adminKommentar: "",
+      dfbnetSpiel: false,
+      dfbnetPlatz: false,
       erstelltAm: new Date().toISOString(),
       entschiedenAm: null,
       entschiedenVon: null,
@@ -462,10 +464,23 @@ async function entscheideReservierung(id, entscheidung, adminKommentar) {
   await saveWithConflictRetry((data) => {
     const r = data.reservierungen.find((x) => x.id === id);
     if (!r || r.status !== "angefragt") return;
+    // Guard IM mutate-Closure (Konflikt-Retry): Genehmigung erst, wenn beide
+    // DFBnet-Haken gesetzt sind — auch wenn der Button clientseitig bereits
+    // disabled war, prüft der Save-Pfad nochmal gegen den frischen Stand.
+    if (entscheidung === "genehmigt" && !(r.dfbnetSpiel && r.dfbnetPlatz)) return;
     r.status = entscheidung;
     r.entschiedenAm = new Date().toISOString();
     r.entschiedenVon = currentUsername;
     if (adminKommentar !== undefined) r.adminKommentar = adminKommentar;
+  });
+  renderAll();
+}
+
+async function setDfbnetFlag(id, feld, value) {
+  await saveWithConflictRetry((data) => {
+    const r = data.reservierungen.find((x) => x.id === id);
+    if (!r || r.status !== "angefragt") return;
+    r[feld] = value;
   });
   renderAll();
 }
@@ -528,6 +543,11 @@ function renderVerwaltung() {
         <div class="muted">${escapeHtml(trainerName(r))} · angefragt am ${escapeHtml(fmtDate(r.erstelltAm))}</div>
         ${reservierungInfoHtml(r)}
         ${r.status === "angefragt" ? `
+        <div class="pe-block dfbnet-block">
+          <span class="pe-block-label">DFBnet:</span>
+          <label class="pe-checkbox"><input type="checkbox" class="dfbnet-check" data-feld="dfbnetSpiel" ${r.dfbnetSpiel ? "checked" : ""} /> Spiel eingetragen</label>
+          <label class="pe-checkbox"><input type="checkbox" class="dfbnet-check" data-feld="dfbnetPlatz" ${r.dfbnetPlatz ? "checked" : ""} /> Platz reserviert/eingetragen</label>
+        </div>
         <div class="form-field admin-kommentar-field">
           <label>Admin-Kommentar</label>
           <input type="text" class="admin-kommentar-input" value="${escapeHtml(r.adminKommentar || "")}" placeholder="z. B. bitte Flutlicht abstimmen" />
@@ -536,7 +556,7 @@ function renderVerwaltung() {
       <div class="res-row-actions">
         ${statusBadgeHtml(r.status)}
         ${r.status === "angefragt" ? `
-          <button type="button" class="btn success small btn-genehmigen">Genehmigen</button>
+          <button type="button" class="btn success small btn-genehmigen"${(r.dfbnetSpiel && r.dfbnetPlatz) ? "" : " disabled title=\"Erst möglich, wenn Spiel und Platz im DFBnet eingetragen sind\""}>Genehmigen</button>
           <button type="button" class="btn secondary small btn-ablehnen">Ablehnen</button>
         ` : ""}
         <button type="button" class="btn secondary small btn-delete-res">Löschen</button>
@@ -798,6 +818,12 @@ async function init() {
     if (e.target.closest(".btn-genehmigen")) entscheideReservierung(id, "genehmigt", kommentar);
     else if (e.target.closest(".btn-ablehnen")) entscheideReservierung(id, "abgelehnt", kommentar);
     else if (e.target.closest(".btn-delete-res")) deleteReservierungAdmin(id);
+  });
+  document.getElementById("verwaltung-rows").addEventListener("change", (e) => {
+    const check = e.target.closest(".dfbnet-check");
+    if (!check) return;
+    const row = e.target.closest(".res-row");
+    setDfbnetFlag(row.dataset.id, check.dataset.feld, check.checked);
   });
   document.getElementById("btn-export-text").addEventListener("click", exportText);
   document.getElementById("btn-export-pdf").addEventListener("click", exportPdf);

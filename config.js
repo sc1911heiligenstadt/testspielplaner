@@ -44,6 +44,7 @@ const APP_CHANGELOG = [
         title: "Verwaltung & Einstellungen (nur Admins)",
         items: [
           "Jede Anfrage muss von einem Admin genehmigt oder abgelehnt werden (mit Kommentar); Genehmigte Reservierungen werden vom Trainer selbst auf „vereinbart“ gesetzt, sobald der Gegner feststeht.",
+          "Genehmigung erst möglich, wenn der Admin bestätigt hat, dass Spiel und Platz im DFBnet eingetragen bzw. reserviert sind (zwei Haken pro Anfrage).",
           "Alle Reservierungen filterbar nach Status, Export als Text oder PDF.",
           "Plätze admin-editierbar: Name, aktiv/inaktiv, angebotene Feldgrößen.",
           "Kontingent pro Trainer und Saison zentral einstellbar."
