@@ -1,6 +1,5 @@
 // Persistenz über das zentrale ToolsUebersicht-Login-Gateway.
-// Adaptiert aus E:\materialbedarf\db.js (gleiches Gateway-Muster), ergänzt um
-// fetchPlatzbelegung() für den read-only Trainingsplan-Abgleich.
+// Adaptiert aus E:\materialbedarf\db.js (gleiches Gateway-Muster).
 const GATEWAY_URL = "https://landingpage.michel-brunner.workers.dev";
 const TOKEN_STORAGE_KEY = "tu_session_token";
 const GATEWAY_APP_ID = "testspielplaner";
@@ -58,12 +57,4 @@ async function gatewaySave(dataObj) {
 // Liefert {username, isAdmin, groupIds, vorname, nachname, mannschaften} der eingeloggten Person.
 async function fetchMe() {
   return gatewayRequest({ action: "me", app: GATEWAY_APP_ID });
-}
-
-// Read-only-Auszug des Trainings-Wochenplans aus der Platzbelegung-App (eigene schmale
-// Worker-Action, Minimal-Auszug: plaetze {id,name} + belegungen {tag,platz,start,ende,label}).
-// Zugriff ist serverseitig an die Testspielplaner-Sichtbarkeit gebunden, nicht an die
-// Platzbelegung-Kachel.
-async function fetchPlatzbelegung() {
-  return gatewayRequest({ action: "testspielplaner-platzbelegung", app: GATEWAY_APP_ID });
 }

@@ -1,5 +1,4 @@
 let appData = { einstellungen: { kontingentProSaison: null }, plaetze: [], reservierungen: [] };
-let platzbelegungData = null; // {plaetze:[{id,name}], belegungen:[...]} oder null (nicht ladbar)
 let currentUsername = null;
 let currentIsAdmin = false;
 let currentVorname = null;
@@ -14,10 +13,6 @@ const RESERVIERUNG_STATUS = [
   { id: "abgelehnt", label: "Abgelehnt" },
   { id: "freigegeben", label: "Freigegeben" }
 ];
-
-// getDay(): 0 = Sonntag -> null (die Platzbelegung kennt keinen Sonntag, dort ist
-// bzgl. Training also nichts hinterlegt).
-const WOCHENTAG_BY_GETDAY = [null, "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 // ---------- Helpers ----------
 
@@ -60,14 +55,6 @@ function isoPlusTage(iso, tage) {
   const d = dateFromIso(iso);
   d.setDate(d.getDate() + tage);
   return dateToIso(d);
-}
-
-function wochentagOf(iso) {
-  return WOCHENTAG_BY_GETDAY[dateFromIso(iso).getDay()];
-}
-
-function wochentagName(iso) {
-  return dateFromIso(iso).toLocaleDateString("de-DE", { weekday: "long" });
 }
 
 function timeToMin(t) {
@@ -116,18 +103,10 @@ function normalizeAppData(data) {
   if (!d.einstellungen || typeof d.einstellungen !== "object") d.einstellungen = {};
   if (typeof d.einstellungen.kontingentProSaison !== "number") d.einstellungen.kontingentProSaison = null;
   if (!Array.isArray(d.plaetze) || !d.plaetze.length) {
-    d.plaetze = DEFAULT_PLAETZE.map((p) => ({ ...p, feldgroessen: p.feldgroessen.slice(), platzbelegungIds: p.platzbelegungIds.slice() }));
+    d.plaetze = DEFAULT_PLAETZE.map((p) => ({ ...p, feldgroessen: p.feldgroessen.slice() }));
   }
   if (!Array.isArray(d.reservierungen)) d.reservierungen = [];
   return d;
-}
-
-function normalizePlatzbelegung(pb) {
-  if (!pb || typeof pb !== "object") return null;
-  return {
-    plaetze: Array.isArray(pb.plaetze) ? pb.plaetze : [],
-    belegungen: Array.isArray(pb.belegungen) ? pb.belegungen : []
-  };
 }
 
 function aktivePlaetze() { return appData.plaetze.filter((p) => p.aktiv !== false); }
@@ -237,23 +216,12 @@ function renderReminderBanner() {
     <div class="muted" style="margin-top:4px;">Bitte unter „Meine Reservierungen“ den Gegner eintragen — oder den Platz freigeben, damit andere ihn nutzen können.</div>`;
 }
 
-// ---------- Slot-Suche ----------
+// ---------- Überschneidungs-Prüfung ----------
 
-// Belegte Blöcke eines (groben) Platzes an einem konkreten Datum:
-// Training aus der Platzbelegung (Wochentags-Muster, aggregiert über alle
-// zugeordneten Teilplätze) + eigene Reservierungen mit blockierendem Status.
+// Belegte Blöcke eines Platzes an einem konkreten Datum: eigene Reservierungen
+// mit blockierendem Status (für die Überschneidungs-Warnung im Anfrage-Formular).
 function busyBlocksFor(platz, dateIso) {
   const blocks = [];
-  const tag = wochentagOf(dateIso);
-  if (tag && platzbelegungData) {
-    for (const b of platzbelegungData.belegungen) {
-      if (b.tag !== tag) continue;
-      if (!(platz.platzbelegungIds || []).includes(b.platz)) continue;
-      const s = timeToMin(b.start), e = timeToMin(b.ende);
-      if (s == null || e == null || e <= s) continue;
-      blocks.push({ start: s, ende: e, art: "training", label: "Training: " + (b.label || "belegt") });
-    }
-  }
   for (const r of appData.reservierungen) {
     if (r.datum !== dateIso || r.platzId !== platz.id) continue;
     if (!BLOCKIERENDE_STATUS.includes(r.status)) continue;
@@ -264,92 +232,10 @@ function busyBlocksFor(platz, dateIso) {
   return blocks;
 }
 
-function mergeIntervals(blocks) {
-  const sorted = blocks.slice().sort((a, b) => a.start - b.start);
-  const merged = [];
-  for (const b of sorted) {
-    const last = merged[merged.length - 1];
-    if (last && b.start <= last.ende) last.ende = Math.max(last.ende, b.ende);
-    else merged.push({ start: b.start, ende: b.ende });
-  }
-  return merged;
-}
-
-// Freie Lücken im Fenster [fensterStart, fensterEnde), mindestens MIN_SLOT_MIN lang.
-function freeGaps(blocks, fensterStart, fensterEnde) {
-  const gaps = [];
-  let cursor = fensterStart;
-  for (const b of mergeIntervals(blocks)) {
-    if (b.ende <= fensterStart || b.start >= fensterEnde) continue;
-    const s = Math.max(b.start, fensterStart);
-    if (s > cursor) gaps.push({ start: cursor, ende: s });
-    cursor = Math.max(cursor, Math.min(b.ende, fensterEnde));
-  }
-  if (cursor < fensterEnde) gaps.push({ start: cursor, ende: fensterEnde });
-  return gaps.filter((g) => g.ende - g.start >= MIN_SLOT_MIN);
-}
-
-function renderSlotRow(platz, iso, blocks, gaps, fensterStart, fensterEnde) {
-  const span = fensterEnde - fensterStart;
-  const blockHtml = blocks
-    .filter((b) => b.ende > fensterStart && b.start < fensterEnde)
-    .map((b) => {
-      const s = Math.max(b.start, fensterStart), e = Math.min(b.ende, fensterEnde);
-      const left = ((s - fensterStart) / span) * 100;
-      const width = ((e - s) / span) * 100;
-      return `<div class="slot-block ${b.art === "training" ? "training" : "reservierung"}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;" title="${escapeHtml(`${b.label} (${minToTime(b.start)}–${minToTime(b.ende)})`)}"></div>`;
-    }).join("");
-  const chips = gaps.map((g) =>
-    `<button type="button" class="gap-chip" data-datum="${iso}" data-platz="${escapeHtml(platz.id)}" data-von="${minToTime(g.start)}" data-bis="${minToTime(g.ende)}">${minToTime(g.start)}–${minToTime(g.ende)}</button>`
-  ).join("");
-  return `
-    <div class="slot-row">
-      <div class="slot-row-head">
-        <span class="slot-platzname">${escapeHtml(platz.name)}</span>
-        <span class="muted">${minToTime(fensterStart)}–${minToTime(fensterEnde)}</span>
-      </div>
-      <div class="slot-track">${blockHtml}</div>
-      <div class="slot-chips">${chips || '<span class="muted">Keine freie Lücke im Zeitfenster.</span>'}</div>
-    </div>`;
-}
-
-function runSlotSuche() {
-  const out = document.getElementById("suche-ergebnis");
-  const fehler = (msg) => { out.innerHTML = `<p class="muted" style="color:var(--red);">${escapeHtml(msg)}</p>`; };
-  const von = document.getElementById("s-von").value;
-  const bis = document.getElementById("s-bis").value || von;
-  const zeitVon = document.getElementById("s-zeit-von").value || SUCHFENSTER_START;
-  const zeitBis = document.getElementById("s-zeit-bis").value || SUCHFENSTER_ENDE;
-  const feldgroesse = document.getElementById("s-feldgroesse").value;
-
-  if (!von) { fehler("Bitte ein Von-Datum wählen."); return; }
-  if (bis < von) { fehler("Das Bis-Datum liegt vor dem Von-Datum."); return; }
-  const tage = Math.round((dateFromIso(bis) - dateFromIso(von)) / 86400000) + 1;
-  if (tage > SUCHE_MAX_TAGE) { fehler(`Bitte höchstens ${SUCHE_MAX_TAGE} Tage auf einmal durchsuchen.`); return; }
-  const fs = timeToMin(zeitVon), fe = timeToMin(zeitBis);
-  if (fs == null || fe == null || fe <= fs) { fehler("Ungültiges Uhrzeit-Fenster."); return; }
-  const plaetze = aktivePlaetze().filter((p) => (p.feldgroessen || []).includes(feldgroesse));
-  if (!plaetze.length) { fehler("Kein aktiver Platz bietet diese Feldgröße an."); return; }
-
-  let html = "";
-  if (!platzbelegungData) {
-    html += `<div class="hinweis-warnung">⚠ Trainingszeiten konnten nicht geladen werden — die Anzeige berücksichtigt nur Testspiel-Reservierungen und ist unvollständig.</div>`;
-  }
-  for (let iso = von, i = 0; i < tage; iso = isoPlusTage(iso, 1), i++) {
-    const sonntag = wochentagOf(iso) === null;
-    html += `<div class="suche-tag">
-      <h4>${escapeHtml(wochentagName(iso))}, ${escapeHtml(isoToDisplay(iso))}${sonntag ? ' <span class="muted">(kein Trainingsplan hinterlegt — nur Reservierungen berücksichtigt)</span>' : ""}</h4>
-      ${plaetze.map((p) => renderSlotRow(p, iso, busyBlocksFor(p, iso), freeGaps(busyBlocksFor(p, iso), fs, fe), fs, fe)).join("")}
-    </div>`;
-  }
-  out.innerHTML = html;
-}
-
 // ---------- Neue Anfrage (Formular) ----------
 
 function renderFeldgroesseSelects() {
   const options = FELDGROESSEN.map((f) => `<option value="${f.id}">${escapeHtml(f.label)}</option>`).join("");
-  document.getElementById("s-feldgroesse").innerHTML = options;
   document.getElementById("f-feldgroesse").innerHTML = options;
 }
 
@@ -662,22 +548,8 @@ function renderVerwaltung() {
 // ---------- Einstellungen (Admin) ----------
 
 function platzEditorHtml(platz) {
-  const mappingRendered = !!platzbelegungData;
-  let mappingHtml;
-  if (mappingRendered) {
-    const bekannt = platzbelegungData.plaetze;
-    const zugeordnet = platz.platzbelegungIds || [];
-    const unbekannt = zugeordnet.filter((id) => !bekannt.some((p) => p.id === id));
-    mappingHtml = bekannt.map((p) => `
-      <label class="pe-checkbox"><input type="checkbox" class="pe-map" data-pbid="${escapeHtml(p.id)}" ${zugeordnet.includes(p.id) ? "checked" : ""} /> ${escapeHtml(p.name)}</label>
-    `).join("") + unbekannt.map((id) => `
-      <label class="pe-checkbox pe-unbekannt"><input type="checkbox" class="pe-map" data-pbid="${escapeHtml(id)}" checked /> ${escapeHtml(id)} <span title="Diese Teilplatz-Id existiert nicht (mehr) in der Platzbelegung — Zuordnung greift nicht.">⚠ unbekannt in Platzbelegung</span></label>
-    `).join("");
-  } else {
-    mappingHtml = `<span class="muted">Trainingsplan nicht geladen — die bestehende Zuordnung bleibt beim Speichern unverändert.</span>`;
-  }
   return `
-    <div class="platz-editor" data-platz-id="${escapeHtml(platz.id)}" data-mapping-rendered="${mappingRendered ? "1" : "0"}">
+    <div class="platz-editor" data-platz-id="${escapeHtml(platz.id)}">
       <div class="platz-editor-head">
         <input type="text" class="pe-name" value="${escapeHtml(platz.name || "")}" placeholder="Platzname" />
         <label class="pe-checkbox"><input type="checkbox" class="pe-aktiv" ${platz.aktiv !== false ? "checked" : ""} /> Aktiv</label>
@@ -688,10 +560,6 @@ function platzEditorHtml(platz) {
         ${FELDGROESSEN.map((f) => `
           <label class="pe-checkbox"><input type="checkbox" class="pe-feldgroesse" data-fg="${f.id}" ${(platz.feldgroessen || []).includes(f.id) ? "checked" : ""} /> ${escapeHtml(f.label)}</label>
         `).join("")}
-      </div>
-      <div class="pe-block">
-        <span class="pe-block-label">Belegt durch Training auf (Platzbelegung):</span>
-        ${mappingHtml}
       </div>
     </div>`;
 }
@@ -715,16 +583,11 @@ function collectEinstellungenFromForm() {
   const kontingent = kontRaw !== "" && Number.isFinite(kontNum) && kontNum > 0 ? kontNum : null;
   const plaetze = Array.from(document.querySelectorAll("#einstellungen-plaetze .platz-editor")).map((el) => {
     const id = el.dataset.platzId;
-    const bisher = platzById(id);
-    const mappingRendered = el.dataset.mappingRendered === "1";
     return {
       id,
       name: el.querySelector(".pe-name").value.trim(),
       aktiv: el.querySelector(".pe-aktiv").checked,
-      feldgroessen: Array.from(el.querySelectorAll(".pe-feldgroesse:checked")).map((c) => c.dataset.fg),
-      platzbelegungIds: mappingRendered
-        ? Array.from(el.querySelectorAll(".pe-map:checked")).map((c) => c.dataset.pbid)
-        : (bisher ? (bisher.platzbelegungIds || []) : [])
+      feldgroessen: Array.from(el.querySelectorAll(".pe-feldgroesse:checked")).map((c) => c.dataset.fg)
     };
   });
   return { kontingent, plaetze };
@@ -754,7 +617,7 @@ async function saveEinstellungen() {
 }
 
 function addPlatzEditor() {
-  const neu = { id: "p-" + uuid().slice(0, 8), name: "", aktiv: true, feldgroessen: FELDGROESSEN.map((f) => f.id), platzbelegungIds: [] };
+  const neu = { id: "p-" + uuid().slice(0, 8), name: "", aktiv: true, feldgroessen: FELDGROESSEN.map((f) => f.id) };
   document.getElementById("einstellungen-plaetze").insertAdjacentHTML("beforeend", platzEditorHtml(neu));
 }
 
@@ -900,22 +763,6 @@ async function init() {
   renderChangelog();
   setupTabs();
   renderFeldgroesseSelects();
-  document.getElementById("s-zeit-von").value = SUCHFENSTER_START;
-  document.getElementById("s-zeit-bis").value = SUCHFENSTER_ENDE;
-
-  document.getElementById("btn-suche").addEventListener("click", runSlotSuche);
-  document.getElementById("suche-ergebnis").addEventListener("click", (e) => {
-    const chip = e.target.closest(".gap-chip");
-    if (!chip) return;
-    document.getElementById("f-datum").value = chip.dataset.datum;
-    document.getElementById("f-von").value = chip.dataset.von;
-    document.getElementById("f-bis").value = chip.dataset.bis;
-    document.getElementById("f-feldgroesse").value = document.getElementById("s-feldgroesse").value;
-    renderPlatzSelect();
-    document.getElementById("f-platz").value = chip.dataset.platz;
-    checkFormOverlap();
-    document.getElementById("anfrage-card").scrollIntoView({ behavior: "smooth", block: "start" });
-  });
 
   document.getElementById("f-typ").addEventListener("change", (e) => {
     document.getElementById("anfrage-card").classList.toggle("typ-lv", e.target.value === "leistungsvergleich");
@@ -975,14 +822,11 @@ async function init() {
   }
 
   try {
-    // fetchMe() (Identität), gatewayLoad() (eigene Daten) und fetchPlatzbelegung()
-    // (Trainingsplan, read-only) sind unabhängige Worker-Aufrufe — parallel statt
-    // seriell. Der Trainingsplan ist optional: schlägt er fehl (alter Worker,
-    // Netzfehler), läuft die App mit Warnung in der Slot-Suche weiter.
-    const [me, data, pb] = await Promise.all([
+    // fetchMe() (Identität) und gatewayLoad() (eigene Daten) sind unabhängige
+    // Worker-Aufrufe — parallel statt seriell.
+    const [me, data] = await Promise.all([
       fetchMe(),
-      gatewayLoad(),
-      fetchPlatzbelegung().catch(() => null)
+      gatewayLoad()
     ]);
     currentUsername = me.username;
     currentIsAdmin = !!me.isAdmin;
@@ -995,7 +839,6 @@ async function init() {
     }
     currentMannschaften = Array.isArray(me.mannschaften) ? me.mannschaften : [];
     appData = normalizeAppData(data);
-    platzbelegungData = normalizePlatzbelegung(pb);
     // Admin-UI rein CSS-reaktiv über die Body-Klasse (kein isAdmin im Render-HTML,
     // siehe startApp-Timing-Gotcha der Geschwister-Apps).
     document.body.classList.toggle("is-admin", currentIsAdmin);

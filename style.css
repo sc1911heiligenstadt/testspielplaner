@@ -175,46 +175,6 @@ button.btn:disabled { opacity: 0.6; cursor: default; }
 .kontingent-info { margin-bottom: 12px; }
 .kontingent-info.kontingent-voll { color: var(--red); font-weight: 600; }
 
-/* ---------- Slot-Suche ---------- */
-
-#suche-ergebnis { margin-top: 14px; }
-.hinweis-warnung {
-  background: var(--gold-light);
-  border: 1px solid var(--gold);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-.suche-tag { margin-bottom: 18px; }
-.suche-tag h4 { font-size: 14px; margin-bottom: 8px; color: var(--blue); }
-.slot-row { margin-bottom: 12px; }
-.slot-row-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 3px; }
-.slot-platzname { font-weight: 600; font-size: 13px; }
-.slot-track {
-  position: relative;
-  height: 20px;
-  background: var(--green-light);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.slot-block { position: absolute; top: 0; bottom: 0; }
-.slot-block.training { background: #9aa3b2; }
-.slot-block.reservierung { background: var(--red); opacity: 0.85; }
-.slot-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.gap-chip {
-  background: var(--white);
-  border: 1px solid var(--green);
-  color: var(--green);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.gap-chip:hover { background: var(--green-light); }
-
 /* ---------- Neue Anfrage ---------- */
 
 .lv-only { display: none; }
@@ -316,8 +276,6 @@ button.btn:disabled { opacity: 0.6; cursor: default; }
 .pe-block-label { font-size: 12px; color: var(--muted); font-weight: 600; flex: 0 0 auto; }
 .pe-checkbox { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .pe-checkbox input { cursor: pointer; }
-.pe-unbekannt { color: var(--red); }
-.pe-unbekannt span { font-size: 11px; font-weight: 700; }
 
 /* ---------- Druckansicht (PDF-Export via window.print) ---------- */
 

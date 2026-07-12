@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>🆚 Testspielplaner</title>
 <meta name="theme-color" content="#1a56a0" />
-<link rel="stylesheet" href="style.css?v=1.0" />
+<link rel="stylesheet" href="style.css?v=1.1" />
 </head>
 <body>
 
@@ -47,26 +47,6 @@
     <section class="tab-section active" id="tab-planen">
 
       <div class="card reminder-banner" id="reminder-banner" style="display:none;"></div>
-
-      <div class="card">
-        <h2>Freien Platz finden</h2>
-        <p class="muted">
-          Zeitraum angeben (z. B. Montag bis Donnerstag) — freie Lücken erscheinen als klickbare
-          Vorschläge und füllen die Anfrage unten automatisch aus. Trainingszeiten aus der
-          Platzbelegung und bestehende Reservierungen werden berücksichtigt.
-        </p>
-        <div class="form-grid">
-          <div class="form-field"><label>Von (Datum)</label><input type="date" id="s-von" /></div>
-          <div class="form-field"><label>Bis (Datum)</label><input type="date" id="s-bis" /></div>
-          <div class="form-field"><label>Uhrzeit von</label><input type="time" id="s-zeit-von" /></div>
-          <div class="form-field"><label>Uhrzeit bis</label><input type="time" id="s-zeit-bis" /></div>
-          <div class="form-field"><label>Feldgröße</label><select id="s-feldgroesse"></select></div>
-        </div>
-        <div class="btn-row" style="justify-content:flex-start;">
-          <button type="button" class="btn" id="btn-suche">Freie Slots suchen</button>
-        </div>
-        <div id="suche-ergebnis"></div>
-      </div>
 
       <div class="card" id="anfrage-card">
         <h2>Neue Anfrage</h2>
@@ -179,8 +159,7 @@
 
         <h3 style="margin-top:22px;">Plätze</h3>
         <p class="muted">
-          Feldgrößen steuern, welche Plätze die Slot-Suche anbietet. Die Platzbelegung-Zuordnung
-          legt fest, welche Trainings-Teilplätze diesen Platz blockieren.
+          Feldgrößen steuern, welche Plätze bei einer Anfrage zur Auswahl stehen.
         </p>
         <div id="einstellungen-plaetze"></div>
         <div class="btn-row" style="justify-content:flex-start; margin-top:10px;">
@@ -201,8 +180,8 @@
 <!-- Druckbereich (nur für PDF-Export sichtbar) -->
 <div id="print-area"><div id="print-content"></div></div>
 
-<script src="config.js?v=1.0"></script>
-<script src="db.js?v=1.0"></script>
-<script src="app.js?v=1.0"></script>
+<script src="config.js?v=1.1"></script>
+<script src="db.js?v=1.1"></script>
+<script src="app.js?v=1.1"></script>
 </body>
 </html>
