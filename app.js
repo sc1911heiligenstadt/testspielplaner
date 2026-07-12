@@ -1,9 +1,12 @@
 let appData = { einstellungen: { trainerZugriff: {} }, plaetze: [], reservierungen: [] };
 let currentUsername = null;
 let currentIsAdmin = false;
+let currentCanEdit = false;
 let currentVorname = null;
 let currentNachname = null;
 let currentMannschaften = [];
+
+function canEdit() { return currentIsAdmin || currentCanEdit; }
 let currentStatusFilter = "alle";
 // Trainer-Verzeichnis für die Freigabeliste in Einstellungen — lazy geladen
 // beim ersten Öffnen des Tabs, danach für die Session gecacht.
@@ -490,6 +493,7 @@ async function withdrawReservierung(id) {
 }
 
 async function entscheideReservierung(id, entscheidung, adminKommentar) {
+  if (!canEdit()) return;
   await saveWithConflictRetry((data) => {
     const r = data.reservierungen.find((x) => x.id === id);
     if (!r || r.status !== "angefragt") return;
@@ -506,6 +510,7 @@ async function entscheideReservierung(id, entscheidung, adminKommentar) {
 }
 
 async function setDfbnetFlag(id, feld, value) {
+  if (!canEdit()) return;
   await saveWithConflictRetry((data) => {
     const r = data.reservierungen.find((x) => x.id === id);
     if (!r || r.status !== "angefragt") return;
@@ -541,6 +546,7 @@ async function gebePlatzFrei(id) {
 }
 
 async function deleteReservierungAdmin(id) {
+  if (!canEdit()) return;
   if (!confirm("Diese Reservierung wirklich endgültig löschen?")) return;
   await saveWithConflictRetry((data) => {
     data.reservierungen = data.reservierungen.filter((r) => r.id !== id);
@@ -685,6 +691,7 @@ function collectEinstellungenFromForm() {
 }
 
 async function saveEinstellungen() {
+  if (!canEdit()) return;
   showEinstellungenStatus("");
   const { plaetze, trainerZugriff, trainerZugriffLoaded } = collectEinstellungenFromForm();
   if (plaetze.some((p) => !p.name)) { showEinstellungenStatus("Bitte jedem Platz einen Namen geben.", true); return; }
@@ -934,6 +941,7 @@ async function init() {
     ]);
     currentUsername = me.username;
     currentIsAdmin = !!me.isAdmin;
+    currentCanEdit = !!me.canEdit;
     currentVorname = me.vorname || null;
     currentNachname = me.nachname || null;
     if (!currentVorname && !currentNachname) {
@@ -944,8 +952,10 @@ async function init() {
     currentMannschaften = Array.isArray(me.mannschaften) ? me.mannschaften : [];
     appData = normalizeAppData(data);
     // Admin-UI rein CSS-reaktiv über die Body-Klasse (kein isAdmin im Render-HTML,
-    // siehe startApp-Timing-Gotcha der Geschwister-Apps).
-    document.body.classList.toggle("is-admin", currentIsAdmin);
+    // siehe startApp-Timing-Gotcha der Geschwister-Apps). Seit Bearbeiten-Recht-
+    // Trennung: is-admin-Klasse steuert jetzt canEdit() (Admin ODER editGroupIds),
+    // Name bewusst beibehalten (CSS/Doku referenzieren ihn).
+    document.body.classList.toggle("is-admin", canEdit());
     // Nicht freigeschaltete Trainer sehen statt des Anfrage-Formulars nur den Hinweis.
     const erlaubt = darfAnfragen(appData, currentUsername, currentIsAdmin);
     document.getElementById("anfrage-card").style.display = erlaubt ? "" : "none";

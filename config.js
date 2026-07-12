@@ -28,6 +28,17 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
+    version: "1.4",
+    groups: [
+      {
+        title: "Bearbeiten-Recht",
+        items: [
+          "Genehmigen/Ablehnen, DFBnet-Haken, Löschen und Einstellungen jetzt an das Bearbeiten-Recht der Gruppen-Verwaltung gekoppelt, nicht mehr an Admin-Status allein. Eigene Anfrage stellen/zurückziehen/Gegner eintragen bleibt für jeden freigeschalteten Trainer unverändert."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.3",
     groups: [
       {
