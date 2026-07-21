@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>🆚 Testspielplaner</title>
 <meta name="theme-color" content="#1a56a0" />
-<link rel="stylesheet" href="style.css?v=1.0" />
+<link rel="stylesheet" href="style.css?v=1.1" />
 </head>
 <body>
 
@@ -39,9 +39,11 @@
 <div id="app-shell" style="display:none;">
   <nav>
     <button data-tab="planen" class="active">Planen</button>
-    <button data-tab="info">Info</button>
-    <button data-tab="verwaltung" class="admin-only" style="margin-left:auto;">Verwaltung</button>
-    <button data-tab="einstellungen" class="admin-only">Einstellungen</button>
+    <div class="nav-right">
+      <button data-tab="verwaltung" class="admin-only">Verwaltung</button>
+      <button data-tab="einstellungen" class="admin-only">Einstellungen</button>
+      <button data-tab="info">Info</button>
+    </div>
   </nav>
   <main>
 
