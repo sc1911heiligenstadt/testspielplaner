@@ -39,6 +39,7 @@
 <div id="app-shell" style="display:none;">
   <nav>
     <button data-tab="planen" class="active">Planen</button>
+    <button data-tab="info">Info</button>
     <button data-tab="verwaltung" class="admin-only" style="margin-left:auto;">Verwaltung</button>
     <button data-tab="einstellungen" class="admin-only">Einstellungen</button>
   </nav>
@@ -114,11 +115,19 @@
         </div>
       </div>
 
-      <div class="card" id="changelog-panel">
-        <h3>Versionshistorie <span class="version-badge" id="version-badge-2"></span></h3>
+
+    </section>
+
+    <!-- ---------- Info ---------- -->
+    <section class="tab-section" id="tab-info">
+      <div class="card">
+        <h2>Über den Testspielplaner <span class="version-badge" id="version-badge-2"></span></h2>
+        <p class="muted">Testspiele und Leistungsvergleiche anfragen und reservieren.</p>
+      </div>
+      <div class="card">
+        <h2>Änderungen</h2>
         <div id="changelog-list"></div>
       </div>
-
     </section>
 
     <section class="tab-section" id="tab-verwaltung">
@@ -192,6 +201,6 @@
 
 <script src="config.js?v=1.0"></script>
 <script src="db.js?v=1.0"></script>
-<script src="app.js?v=1.0"></script>
+<script src="app.js?v=1.1"></script>
 </body>
 </html>
