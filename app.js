@@ -929,12 +929,13 @@ async function init() {
   }
 
   try {
-    // fetchMe() (Identität) und gatewayLoad() (eigene Daten) sind unabhängige
-    // Worker-Aufrufe — parallel statt seriell.
-    const [me, data] = await Promise.all([
-      fetchMe(),
-      gatewayLoad()
-    ]);
+    // Nacheinander statt Promise.all — und das ist hier schneller, nicht
+    // langsamer: dav-load liefert das "me" mittlerweile gratis mit (der Worker
+    // hat nutzer.json und die Rechte-Datei für diesen Request ohnehin gelesen),
+    // der zweite Aufruf kostet also gar keinen Request mehr. Parallel wären es
+    // zwei echte Requests mit zwei Session-Prüfungen.
+    const data = await gatewayLoad();
+    const me = await fetchMe();
     currentUsername = me.username;
     currentIsAdmin = !!me.isAdmin;
     currentCanEdit = !!me.canEdit;
