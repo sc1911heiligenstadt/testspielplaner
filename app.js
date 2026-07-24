@@ -1,6 +1,7 @@
 let appData = { einstellungen: { trainerZugriff: {} }, plaetze: [], reservierungen: [] };
 let currentUsername = null;
 let currentIsAdmin = false;
+let currentCanAdmin = false; // Administrieren-Stufe für dieses Tool (dritte Rechte-Stufe der Tools-Übersicht) — zählt beim darfAnfragen-Bypass wie ein Admin
 let currentCanEdit = false;
 let currentVorname = null;
 let currentNachname = null;
@@ -339,7 +340,7 @@ function resetAnfrageForm() {
 
 async function submitReservierung() {
   showFormError("");
-  if (!darfAnfragen(appData, currentUsername, currentIsAdmin)) {
+  if (!darfAnfragen(appData, currentUsername, currentIsAdmin || currentCanAdmin)) {
     showFormError("Du bist für die Testspielplanung nicht freigeschaltet.");
     return;
   }
@@ -410,7 +411,7 @@ async function submitReservierung() {
     let blocked = null; // null | "zugriff" | "kontingent"
     await saveWithConflictRetry((data) => {
       blocked = null;
-      if (!darfAnfragen(data, currentUsername, currentIsAdmin)) { blocked = "zugriff"; return; }
+      if (!darfAnfragen(data, currentUsername, currentIsAdmin || currentCanAdmin)) { blocked = "zugriff"; return; }
       const lim = kontingentLimit(data, currentUsername);
       if (lim != null && verbrauchtesKontingent(data, currentUsername, saison) >= lim) { blocked = "kontingent"; return; }
       data.reservierungen.push(res);
@@ -938,6 +939,7 @@ async function init() {
     const me = await fetchMe();
     currentUsername = me.username;
     currentIsAdmin = !!me.isAdmin;
+    currentCanAdmin = !!me.canAdmin;
     currentCanEdit = !!me.canEdit;
     currentVorname = me.vorname || null;
     currentNachname = me.nachname || null;
@@ -954,7 +956,7 @@ async function init() {
     // Name bewusst beibehalten (CSS/Doku referenzieren ihn).
     document.body.classList.toggle("is-admin", canEdit());
     // Nicht freigeschaltete Trainer sehen statt des Anfrage-Formulars nur den Hinweis.
-    const erlaubt = darfAnfragen(appData, currentUsername, currentIsAdmin);
+    const erlaubt = darfAnfragen(appData, currentUsername, currentIsAdmin || currentCanAdmin);
     document.getElementById("anfrage-card").style.display = erlaubt ? "" : "none";
     document.getElementById("anfrage-gesperrt-hinweis").style.display = erlaubt ? "none" : "block";
     startApp();

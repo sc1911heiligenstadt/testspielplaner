@@ -46,7 +46,8 @@ const APP_CHANGELOG = [
           "Jede Anfrage muss von einem Admin genehmigt oder abgelehnt werden (mit Kommentar); genehmigte Reservierungen werden vom Trainer selbst auf „vereinbart“ gesetzt, sobald der Gegner feststeht. Genehmigung ist erst möglich, wenn bestätigt ist, dass Spiel und Platz im DFBnet eingetragen bzw. reserviert sind (zwei Haken pro Anfrage).",
           "Alle Reservierungen filterbar nach Status, Export als Text oder PDF.",
           "Plätze admin-editierbar: Name, aktiv/inaktiv, angebotene Feldgrößen.",
-          "Trainer-Freigaben: aufklappbare Liste aller Trainer, je Checkbox „darf anfragen“ + eigenes Saison-Kontingent — nicht freigeschaltete Trainer sehen im Planen-Tab statt des Formulars einen Hinweis."
+          "Trainer-Freigaben: aufklappbare Liste aller Trainer, je Checkbox „darf anfragen“ + eigenes Saison-Kontingent — nicht freigeschaltete Trainer sehen im Planen-Tab statt des Formulars einen Hinweis.",
+          "Wer in der Tools-Übersicht die Stufe „Administrieren“ für den Testspielplaner hat, darf wie ein Admin immer anfragen (ohne eigene Freigabe-Zeile)."
         ]
       }
     ]
