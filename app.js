@@ -692,7 +692,7 @@ function collectEinstellungenFromForm() {
 }
 
 async function saveEinstellungen() {
-  if (!canEdit()) return;
+  if (!(currentIsAdmin || currentCanAdmin)) return;
   showEinstellungenStatus("");
   const { plaetze, trainerZugriff, trainerZugriffLoaded } = collectEinstellungenFromForm();
   if (plaetze.some((p) => !p.name)) { showEinstellungenStatus("Bitte jedem Platz einen Namen geben.", true); return; }
@@ -955,6 +955,8 @@ async function init() {
     // Trennung: is-admin-Klasse steuert jetzt canEdit() (Admin ODER editGroupIds),
     // Name bewusst beibehalten (CSS/Doku referenzieren ihn).
     document.body.classList.toggle("is-admin", canEdit());
+    // Dritte Stufe: Einstellungen (Plätze/Freigaben) nur für Administrierende.
+    document.body.classList.toggle("is-tooladmin", currentIsAdmin || currentCanAdmin);
     // Nicht freigeschaltete Trainer sehen statt des Anfrage-Formulars nur den Hinweis.
     const erlaubt = darfAnfragen(appData, currentUsername, currentIsAdmin || currentCanAdmin);
     document.getElementById("anfrage-card").style.display = erlaubt ? "" : "none";

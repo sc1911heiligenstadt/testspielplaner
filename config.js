@@ -47,7 +47,8 @@ const APP_CHANGELOG = [
           "Alle Reservierungen filterbar nach Status, Export als Text oder PDF.",
           "Plätze admin-editierbar: Name, aktiv/inaktiv, angebotene Feldgrößen.",
           "Trainer-Freigaben: aufklappbare Liste aller Trainer, je Checkbox „darf anfragen“ + eigenes Saison-Kontingent — nicht freigeschaltete Trainer sehen im Planen-Tab statt des Formulars einen Hinweis.",
-          "Wer in der Tools-Übersicht die Stufe „Administrieren“ für den Testspielplaner hat, darf wie ein Admin immer anfragen (ohne eigene Freigabe-Zeile)."
+          "Wer in der Tools-Übersicht die Stufe „Administrieren“ für den Testspielplaner hat, darf wie ein Admin immer anfragen (ohne eigene Freigabe-Zeile).",
+          "Der Einstellungen-Tab (Plätze, Trainer-Freigaben und Kontingente) ist der Stufe „Administrieren“ vorbehalten — Bearbeiter genehmigen weiterhin Anfragen im Verwaltung-Tab und exportieren die Reservierungen."
         ]
       }
     ]
