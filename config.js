@@ -28,39 +28,57 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
-    version: "1.1",
-    groups: [
-      {
-        title: "Bedienung am Handy",
-        items: [
-          "Die Tab-Leiste bricht am Handy jetzt um, statt seitlich aus dem Bild zu laufen. Vorher waren die hinteren Tabs auf schmalen Bildschirmen nicht erreichbar.",
-          "Eingabefelder sind am Handy mindestens 16 Pixel groß. Dadurch zoomt der iPhone-Browser beim Antippen eines Feldes nicht mehr ungefragt in die Seite hinein und bleibt danach verschoben stehen."
-        ]
-      }
-    ]
-  },
-  {
     version: "1.0",
     groups: [
       {
-        title: "Planen",
+        title: "Testspiel anfragen",
         items: [
-          "Testspiele und Leistungsvergleiche als konkreten Termin anfragen: Datum, Uhrzeit, Platz, Feldgröße (Großfeld / verkürztes Großfeld / Halbfeld), Gegner optional — der Gegner kann nach der Genehmigung nachgetragen werden.",
-          "Leistungsvergleiche zusätzlich mit Anzahl Spiele und Minuten pro Spiel.",
-          "Warnung bei Überschneidung mit bestehenden Reservierungen desselben Platzes.",
-          "Saison-Kontingent je Trainer (Testspiele + Leistungsvergleiche zusammen, Saison 01.07.–30.06.), mit Anzeige des eigenen Verbrauchs.",
-          "Erinnerung im Tool und auf dem Dashboard, wenn ein genehmigter Termin in den nächsten 14 Tagen noch keinen Gegner hat — Gegner eintragen oder Platz freigeben."
+          "Testspiele und Leistungsvergleiche als konkreten Termin anfragen: Datum, Uhrzeit, Platz und Feldgröße — Großfeld, verkürztes Großfeld oder Halbfeld.",
+          "Der Gegner ist beim Anfragen freiwillig und lässt sich nach der Genehmigung nachtragen.",
+          "Bei Leistungsvergleichen kommen Anzahl der Spiele und Minuten je Spiel dazu.",
+          "Überschneidet sich die Anfrage mit einer bestehenden Reservierung desselben Platzes, warnt die App.",
+          "Je Trainer gibt es ein Saison-Kontingent für Testspiele und Leistungsvergleiche zusammen; die Saison läuft vom 1. Juli bis 30. Juni. Der eigene Verbrauch steht sichtbar dabei.",
+          "Hat ein genehmigter Termin 14 Tage vorher noch keinen Gegner, erinnert das Werkzeug daran — im Tool und auf dem Dashboard der Tools-Übersicht. Dann heißt es: Gegner eintragen oder Platz freigeben."
         ]
       },
       {
-        title: "Verwaltung & Einstellungen (nur Admins)",
+        title: "Genehmigen",
         items: [
-          "Jede Anfrage muss von einem Admin genehmigt oder abgelehnt werden (mit Kommentar); genehmigte Reservierungen werden vom Trainer selbst auf „vereinbart“ gesetzt, sobald der Gegner feststeht. Genehmigung ist erst möglich, wenn bestätigt ist, dass Spiel und Platz im DFBnet eingetragen bzw. reserviert sind (zwei Haken pro Anfrage).",
-          "Alle Reservierungen filterbar nach Status, Export als Text oder PDF.",
-          "Plätze admin-editierbar: Name, aktiv/inaktiv, angebotene Feldgrößen.",
-          "Trainer-Freigaben: aufklappbare Liste aller Trainer, je Checkbox „darf anfragen“ + eigenes Saison-Kontingent — nicht freigeschaltete Trainer sehen im Planen-Tab statt des Formulars einen Hinweis.",
-          "Wer in der Tools-Übersicht die Stufe „Administrieren“ für den Testspielplaner hat, darf wie ein Admin immer anfragen (ohne eigene Freigabe-Zeile).",
-          "Der Einstellungen-Tab (Plätze, Trainer-Freigaben und Kontingente) ist der Stufe „Administrieren“ vorbehalten — Bearbeiter genehmigen weiterhin Anfragen im Verwaltung-Tab und exportieren die Reservierungen."
+          "Jede Anfrage muss genehmigt oder abgelehnt werden, eine Ablehnung mit Kommentar.",
+          "Genehmigt wird erst, wenn beides bestätigt ist: das Spiel ist im DFBnet eingetragen und der Platz ist reserviert. Dafür gibt es zwei Haken je Anfrage.",
+          "Sobald der Gegner feststeht, setzt der anfragende Trainer die Reservierung selbst auf „vereinbart“.",
+          "Alle Reservierungen lassen sich nach Status filtern und als Text oder PDF ausgeben."
+        ]
+      },
+      {
+        title: "Plätze und Freigaben",
+        items: [
+          "Plätze sind pflegbar: Name, aktiv oder stillgelegt, und welche Feldgrößen sie anbieten.",
+          "Trainer-Freigaben als aufklappbare Liste: je Trainer ein Häkchen „darf anfragen“ und ein eigenes Saison-Kontingent.",
+          "Wer nicht freigeschaltet ist, sieht im Reiter „Planen“ statt des Formulars einen Hinweis.",
+          "Wer in der Tools-Übersicht die Stufe „Administrieren“ für dieses Werkzeug hat, darf immer anfragen — ohne eigene Freigabe-Zeile."
+        ]
+      },
+      {
+        title: "Wer darf was",
+        items: [
+          "Sehen: die Reservierungen, schreibgeschützt.",
+          "Bearbeiten: Anfragen stellen (sofern freigegeben), Anfragen genehmigen und ablehnen, Reservierungen exportieren.",
+          "Administrieren: zusätzlich Plätze, Trainer-Freigaben und Kontingente im Reiter „Einstellungen“.",
+          "Der Reiter „Info“ ist für alle sichtbar."
+        ]
+      },
+      {
+        title: "Bedienung am Handy",
+        items: [
+          "Die Reiterleiste bricht am Handy um, statt seitlich aus dem Bild zu laufen — auch die hinteren Reiter sind auf schmalen Bildschirmen erreichbar.",
+          "Eingabefelder sind mindestens 16 Pixel groß, damit der iPhone-Browser beim Antippen nicht ungefragt in die Seite hineinzoomt und verschoben stehen bleibt."
+        ]
+      },
+      {
+        title: "Daten & Speicherung",
+        items: [
+          "Gespeichert wird in der Vereins-Nextcloud über die zentrale Anmeldung der Tools-Übersicht — ein eigenes Passwort braucht es nicht."
         ]
       }
     ]
