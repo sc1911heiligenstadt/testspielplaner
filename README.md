@@ -23,6 +23,6 @@ ohne feststehenden Gegner), ein Admin genehmigt, der Gegner wird nachgetragen.
 
 Vanilla-JS-App ohne Build-Step. Anmeldung und Speicherung laufen über das
 zentrale Login-Gateway der
-[Tools-Übersicht](https://tecko1985.github.io/ToolsUebersicht/)
+[Tools-Übersicht](https://sc1911heiligenstadt.github.io/ToolsUebersicht/)
 (Cloudflare Worker → Vereins-Nextcloud, eine JSON-Datei). Kein Passwort und
 keine Zugangsdaten auf dem Gerät.
