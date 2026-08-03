@@ -424,6 +424,9 @@ async function submitReservierung() {
       showFormError(`Dein Kontingent für die Saison ${saison} ist erschöpft — die Anfrage wurde nicht gespeichert.`);
       return;
     }
+    // Erst hier: oben wird bei "zugriff"/"kontingent" mit return abgebrochen,
+    // die Anfrage existiert an dieser Stelle also wirklich.
+    await pushVorgang("neu", res.id);
     resetAnfrageForm();
     renderAll();
   } catch (e2) {
@@ -493,9 +496,30 @@ async function withdrawReservierung(id) {
   renderAll();
 }
 
+// ---------- Benachrichtigung (seit 2026-08-03) ----------
+// Der Empfänger wird SERVERSEITIG bestimmt: bei "neu" die Entscheidenden, bei
+// "entschieden" der Anfragende aus dem Datensatz. Diese App schickt bewusst
+// keinen Nutzernamen mit — sonst könnte ein Bearbeiter beliebige Leute
+// benachrichtigen lassen, und ein Tippfehler liefe unbemerkt ins Leere.
+async function pushVorgang(art, id) {
+  try {
+    await gatewayRequest({ action: "vorgang-push", app: GATEWAY_APP_ID, art, id });
+  } catch (e) {
+    // Best-effort: der Vorgang ist gespeichert, eine misslungene
+    // Benachrichtigung darf ihn nicht als Fehler erscheinen lassen.
+    console.warn("Benachrichtigung fehlgeschlagen", e);
+  }
+}
+
 async function entscheideReservierung(id, entscheidung, adminKommentar) {
   if (!canEdit()) return;
+  // ⚠️ Das mutate-Closure kann still nichts tun (Status schon geändert, DFBnet-
+  // Haken fehlen). Ohne dieses Flag ginge eine Benachrichtigung raus, obwohl
+  // gar nichts entschieden wurde. Zurückgesetzt wird es IM Closure, weil der
+  // Konflikt-Retry es mehrfach ausführt — gleiches Muster wie `blocked` oben.
+  let entschieden = false;
   await saveWithConflictRetry((data) => {
+    entschieden = false;
     const r = data.reservierungen.find((x) => x.id === id);
     if (!r || r.status !== "angefragt") return;
     // Guard IM mutate-Closure (Konflikt-Retry): Genehmigung erst, wenn beide
@@ -506,7 +530,9 @@ async function entscheideReservierung(id, entscheidung, adminKommentar) {
     r.entschiedenAm = new Date().toISOString();
     r.entschiedenVon = currentUsername;
     if (adminKommentar !== undefined) r.adminKommentar = adminKommentar;
+    entschieden = true;
   });
+  if (entschieden) await pushVorgang("entschieden", id);
   renderAll();
 }
 

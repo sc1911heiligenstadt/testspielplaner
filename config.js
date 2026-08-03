@@ -28,6 +28,21 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
+    version: "1.1",
+    groups: [
+      {
+        title: "Benachrichtigung aufs Handy",
+        items: [
+          "Eine neue Anfrage meldet sich bei denen, die darüber entscheiden — bisher musste jemand von sich aus in die Verwaltung schauen.",
+          "Ist über eine Anfrage entschieden worden, bekommt der anfragende Trainer eine Nachricht aufs Handy.",
+          "Die Nachricht nennt keine Namen und kein Ergebnis — sie steht auf dem Sperrbildschirm. Was entschieden wurde, sieht man nach dem Antippen.",
+          "Eingeschaltet wird das in der Tools-Übersicht unter „Mein Konto“, einzeln für dieses Werkzeug. Wer es nicht einschaltet, merkt keinen Unterschied.",
+          "Wird eine Anfrage aus einem anderen Grund nicht gespeichert (fehlende Freigabe, erschöpftes Kontingent, fehlende DFBnet-Haken), geht auch keine Nachricht raus."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.0",
     groups: [
       {
