@@ -12,6 +12,9 @@ let currentStatusFilter = "alle";
 // Trainer-Verzeichnis für die Freigabeliste in Einstellungen — lazy geladen
 // beim ersten Öffnen des Tabs, danach für die Session gecacht.
 let trainerDirectory = null;
+// Wer eine Anfrage entscheiden darf (Bearbeiten- oder Administrieren-Recht) —
+// die Auswahlliste für die Push-Verteilung, ebenfalls lazy + gecacht.
+let entscheiderDirectory = null;
 
 const RESERVIERUNG_STATUS = [
   { id: "angefragt", label: "Angefragt" },
@@ -111,6 +114,12 @@ function normalizeAppData(data) {
   if (!d.einstellungen.trainerZugriff || typeof d.einstellungen.trainerZugriff !== "object") {
     d.einstellungen.trainerZugriff = {};
   }
+  // Verteiler für die Push-Meldung bei neuen Anfragen. LEER heißt bewusst
+  // „alle Berechtigten“ (heutiges Verhalten), nicht „niemand“ — ein still
+  // ausbleibendes Push würde sonst niemandem auffallen. Der Worker legt die
+  // Liste nur als Filter über die Bearbeitenden, sie kann den Kreis also nie
+  // erweitern.
+  if (!Array.isArray(d.einstellungen.pushEmpfaenger)) d.einstellungen.pushEmpfaenger = [];
   if (!Array.isArray(d.plaetze) || !d.plaetze.length) {
     d.plaetze = DEFAULT_PLAETZE.map((p) => ({ ...p, feldgroessen: p.feldgroessen.slice() }));
   }
@@ -174,6 +183,13 @@ async function saveWithConflictRetry(mutate) {
 }
 
 // ---------- Trainer-Freigabe & Kontingent ----------
+
+// Gewählter Verteiler für die Push-Meldung bei neuen Anfragen. Leer = alle
+// Berechtigten (die Entscheidung dazu fällt im Worker, hier steht nur der Wert).
+function pushEmpfaengerListe(data) {
+  const v = data.einstellungen ? data.einstellungen.pushEmpfaenger : null;
+  return Array.isArray(v) ? v : [];
+}
 
 // Freigabe-Eintrag eines Trainers (nur vorhanden, wenn ein Admin ihn je gesetzt hat).
 function trainerZugriffFor(data, username) {
@@ -659,6 +675,16 @@ function trainerZugriffRowHtml(user) {
     </div>`;
 }
 
+// Eine Zeile der Push-Verteilerliste. Nur ein Häkchen — wer angehakt ist,
+// bekommt die Meldung über eine neue Anfrage.
+function pushEmpfaengerRowHtml(user) {
+  const gewaehlt = pushEmpfaengerListe(appData).indexOf(user.username) !== -1;
+  return `
+    <div class="tz-row" data-username="${escapeHtml(user.username)}">
+      <label class="pe-checkbox"><input type="checkbox" class="push-empf" ${gewaehlt ? "checked" : ""} /> ${escapeHtml(user.displayName || user.username)}</label>
+    </div>`;
+}
+
 // Lazy laden + für die Session cachen (nur Admins erreichen den Einstellungen-Tab,
 // der Aufruf lohnt sich also nicht schon beim App-Start für jeden Nutzer).
 async function ensureTrainerDirectory() {
@@ -674,14 +700,63 @@ async function ensureTrainerDirectory() {
   return trainerDirectory;
 }
 
+// Dasselbe für die Entscheidenden. Bewusst eine ZWEITE Quelle statt der
+// Trainerliste: hier dürfen nur Leute stehen, die die Anfrage auch entscheiden
+// können — ein Haken bei jemand anderem wäre ein stiller Blindgänger, weil der
+// Worker die Liste nur als Filter über die Berechtigten legt.
+async function ensureEntscheiderDirectory() {
+  if (entscheiderDirectory) return entscheiderDirectory;
+  try {
+    const res = await fetchToolEditors();
+    const users = Array.isArray(res.users) ? res.users : [];
+    entscheiderDirectory = users.slice().sort((a, b) =>
+      (a.displayName || a.username).localeCompare(b.displayName || b.username, "de"));
+  } catch (e) {
+    entscheiderDirectory = [];
+  }
+  return entscheiderDirectory;
+}
+
 async function renderEinstellungen() {
   document.getElementById("einstellungen-plaetze").innerHTML = appData.plaetze.map(platzEditorHtml).join("");
   const tzList = document.getElementById("trainer-zugriff-list");
   tzList.innerHTML = `<p class="muted">Lade Trainerliste…</p>`;
+  const peList = document.getElementById("push-empfaenger-list");
+  peList.innerHTML = `<p class="muted">Lade Liste…</p>`;
   const users = await ensureTrainerDirectory();
   tzList.innerHTML = users.length
     ? users.map(trainerZugriffRowHtml).join("")
     : `<p class="muted">Trainerliste konnte nicht geladen werden.</p>`;
+  const entscheider = await ensureEntscheiderDirectory();
+  peList.innerHTML = entscheider.length
+    ? entscheider.map(pushEmpfaengerRowHtml).join("")
+    : `<p class="muted">Es ist niemand hinterlegt, der Anfragen entscheiden darf. Die Gruppen dafür werden in der Tools-Übersicht vergeben.</p>`;
+  renderPushEmpfaengerHinweis();
+}
+
+// Sagt an, was der aktuelle Häkchenstand bedeutet — vor allem den Fall „nichts
+// angehakt“, der eben NICHT „niemand“ heißt. Ohne den Satz liest sich eine
+// leere Liste wie ein abgeschalteter Versand.
+function renderPushEmpfaengerHinweis() {
+  const el = document.getElementById("push-empfaenger-hinweis");
+  if (!el) return;
+  const gesamt = document.querySelectorAll("#push-empfaenger-list .tz-row").length;
+  const gewaehlt = document.querySelectorAll("#push-empfaenger-list .push-empf:checked").length;
+  if (!gesamt) { el.style.display = "none"; return; }
+  // Gespeicherte Namen, die niemand mehr entscheiden darf: sie stehen nicht mehr
+  // in der Liste, verschwänden hier also lautlos. Der Totalausfall ist im Worker
+  // abgefangen (bleibt niemand übrig, gehen die Meldungen wieder an alle) —
+  // sichtbar muss es trotzdem sein, sonst schrumpft der Verteiler unbemerkt.
+  const bekannt = (entscheiderDirectory || []).map((u) => u.username);
+  const verwaist = pushEmpfaengerListe(appData).filter((n) => bekannt.indexOf(n) === -1);
+  el.style.display = "block";
+  let text = gewaehlt
+    ? `Es werden ${gewaehlt} von ${gesamt} benachrichtigt.`
+    : `Nichts angehakt — es werden alle ${gesamt} benachrichtigt.`;
+  if (verwaist.length) {
+    text += ` Achtung: ${verwaist.join(", ")} war ausgewählt, darf aber keine Anfragen mehr entscheiden und bekommt nichts mehr. Beim nächsten Speichern fällt der Eintrag weg.`;
+  }
+  el.textContent = text;
 }
 
 function showEinstellungenStatus(msg, isError) {
@@ -711,16 +786,23 @@ function collectEinstellungenFromForm() {
     const kontingent = kontRaw !== "" && Number.isFinite(kontNum) && kontNum > 0 ? kontNum : null;
     trainerZugriff[row.dataset.username] = { erlaubt: true, kontingent };
   });
+  const peRows = Array.from(document.querySelectorAll("#push-empfaenger-list .tz-row"));
+  const pushEmpfaenger = peRows
+    .filter((row) => row.querySelector(".push-empf").checked)
+    .map((row) => row.dataset.username);
   // Zeilen vorhanden ⇒ Trainerliste war geladen, trainerZugriff darf ersetzt werden.
   // Noch nicht geladen (z. B. sehr schnelles Klicken) ⇒ nichts überschreiben, statt
   // versehentlich alle bestehenden Freigaben zu löschen.
-  return { plaetze, trainerZugriff, trainerZugriffLoaded: tzRows.length > 0 };
+  return {
+    plaetze, trainerZugriff, trainerZugriffLoaded: tzRows.length > 0,
+    pushEmpfaenger, pushEmpfaengerLoaded: peRows.length > 0
+  };
 }
 
 async function saveEinstellungen() {
   if (!(currentIsAdmin || currentCanAdmin)) return;
   showEinstellungenStatus("");
-  const { plaetze, trainerZugriff, trainerZugriffLoaded } = collectEinstellungenFromForm();
+  const { plaetze, trainerZugriff, trainerZugriffLoaded, pushEmpfaenger, pushEmpfaengerLoaded } = collectEinstellungenFromForm();
   if (plaetze.some((p) => !p.name)) { showEinstellungenStatus("Bitte jedem Platz einen Namen geben.", true); return; }
   if (!plaetze.length) { showEinstellungenStatus("Mindestens ein Platz muss vorhanden sein.", true); return; }
   const btn = document.getElementById("btn-save-einstellungen");
@@ -729,6 +811,9 @@ async function saveEinstellungen() {
     await saveWithConflictRetry((data) => {
       data.plaetze = plaetze;
       if (trainerZugriffLoaded) data.einstellungen.trainerZugriff = trainerZugriff;
+      // Gleiche Vorsicht wie oben: nur ersetzen, wenn die Liste wirklich
+      // gerendert war — sonst löschte ein sehr schnelles Speichern den Verteiler.
+      if (pushEmpfaengerLoaded) data.einstellungen.pushEmpfaenger = pushEmpfaenger;
     });
     showEinstellungenStatus("Gespeichert ✓");
     renderEinstellungen();
@@ -928,6 +1013,9 @@ async function init() {
     const kont = check.closest(".tz-row").querySelector(".tz-kontingent");
     kont.disabled = !check.checked;
     if (!check.checked) kont.value = "";
+  });
+  document.getElementById("push-empfaenger-list").addEventListener("change", (e) => {
+    if (e.target.closest(".push-empf")) renderPushEmpfaengerHinweis();
   });
   document.getElementById("einstellungen-plaetze").addEventListener("click", (e) => {
     const btn = e.target.closest(".pe-remove");

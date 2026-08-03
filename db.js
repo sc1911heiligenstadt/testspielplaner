@@ -76,3 +76,13 @@ async function fetchMe() {
 async function fetchDirectory() {
   return gatewayRequest({ action: "list-directory" });
 }
+
+// Liefert {users:[{username,displayName}]} — alle mit Bearbeiten- ODER
+// Administrieren-Recht für dieses Tool, also genau die, die eine Anfrage
+// entscheiden können. Quelle für die Push-Verteilerliste in den Einstellungen:
+// in der allgemeinen Trainerliste (fetchDirectory) stünden auch Leute, die gar
+// nicht entscheiden dürfen — ein Haken bei ihnen bliebe wirkungslos, weil der
+// Worker die Liste nur als Filter über die Berechtigten legt.
+async function fetchToolEditors() {
+  return gatewayRequest({ action: "list-tool-editors", app: GATEWAY_APP_ID });
+}

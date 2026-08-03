@@ -28,6 +28,22 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
+    version: "1.2",
+    groups: [
+      {
+        title: "Wer benachrichtigt wird, ist jetzt einstellbar",
+        items: [
+          "Im Reiter „Einstellungen“ gibt es eine neue aufklappbare Liste: „Wer wird über neue Anfragen benachrichtigt“.",
+          "Zur Auswahl stehen nur Personen, die eine Anfrage auch entscheiden dürfen — ein Haken bei jemand anderem hätte nichts bewirkt.",
+          "Solange nichts angehakt ist, bleibt alles wie bisher: alle Entscheidenden werden benachrichtigt. Unter der Liste steht, was der aktuelle Stand bedeutet.",
+          "Die Auswahl kann den Kreis nur verkleinern. Wer sein Bearbeiten-Recht verliert, bekommt automatisch keine Meldung mehr — auch wenn er noch angehakt ist.",
+          "Die Rückmeldung an den anfragenden Trainer ist davon nicht betroffen: die geht immer an ihn.",
+          "Wer für sich selbst gar keine Meldungen möchte, schaltet sie weiterhin in der Tools-Übersicht unter „Mein Konto“ ab."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.1",
     groups: [
       {
