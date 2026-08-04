@@ -28,37 +28,6 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
-    version: "1.2",
-    groups: [
-      {
-        title: "Wer benachrichtigt wird, ist jetzt einstellbar",
-        items: [
-          "Im Reiter „Einstellungen“ gibt es eine neue aufklappbare Liste: „Wer wird über neue Anfragen benachrichtigt“.",
-          "Zur Auswahl stehen nur Personen, die eine Anfrage auch entscheiden dürfen — ein Haken bei jemand anderem hätte nichts bewirkt.",
-          "Solange nichts angehakt ist, bleibt alles wie bisher: alle Entscheidenden werden benachrichtigt. Unter der Liste steht, was der aktuelle Stand bedeutet.",
-          "Die Auswahl kann den Kreis nur verkleinern. Wer sein Bearbeiten-Recht verliert, bekommt automatisch keine Meldung mehr — auch wenn er noch angehakt ist.",
-          "Die Rückmeldung an den anfragenden Trainer ist davon nicht betroffen: die geht immer an ihn.",
-          "Wer für sich selbst gar keine Meldungen möchte, schaltet sie weiterhin in der Tools-Übersicht unter „Mein Konto“ ab."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.1",
-    groups: [
-      {
-        title: "Benachrichtigung aufs Handy",
-        items: [
-          "Eine neue Anfrage meldet sich bei denen, die darüber entscheiden — bisher musste jemand von sich aus in die Verwaltung schauen.",
-          "Ist über eine Anfrage entschieden worden, bekommt der anfragende Trainer eine Nachricht aufs Handy.",
-          "Die Nachricht nennt keine Namen und kein Ergebnis — sie steht auf dem Sperrbildschirm. Was entschieden wurde, sieht man nach dem Antippen.",
-          "Eingeschaltet wird das in der Tools-Übersicht unter „Mein Konto“, einzeln für dieses Werkzeug. Wer es nicht einschaltet, merkt keinen Unterschied.",
-          "Wird eine Anfrage aus einem anderen Grund nicht gespeichert (fehlende Freigabe, erschöpftes Kontingent, fehlende DFBnet-Haken), geht auch keine Nachricht raus."
-        ]
-      }
-    ]
-  },
-  {
     version: "1.0",
     groups: [
       {
@@ -88,6 +57,19 @@ const APP_CHANGELOG = [
           "Trainer-Freigaben als aufklappbare Liste: je Trainer ein Häkchen „darf anfragen“ und ein eigenes Saison-Kontingent.",
           "Wer nicht freigeschaltet ist, sieht im Reiter „Planen“ statt des Formulars einen Hinweis.",
           "Wer in der Tools-Übersicht die Stufe „Administrieren“ für dieses Werkzeug hat, darf immer anfragen — ohne eigene Freigabe-Zeile."
+        ]
+      },
+      {
+        title: "Benachrichtigung aufs Handy",
+        items: [
+          "Eine neue Anfrage meldet sich bei denen, die darüber entscheiden, statt in der Verwaltung auf jemanden zu warten.",
+          "Ist über eine Anfrage entschieden worden, bekommt der anfragende Trainer eine Nachricht aufs Handy.",
+          "Die Nachricht nennt keine Namen und kein Ergebnis — sie steht auf dem Sperrbildschirm. Was entschieden wurde, sieht man nach dem Antippen.",
+          "Eingeschaltet wird das in der Tools-Übersicht unter „Mein Konto“, einzeln für dieses Werkzeug. Wer es nicht einschaltet, merkt keinen Unterschied.",
+          "Wird eine Anfrage aus einem anderen Grund nicht gespeichert (fehlende Freigabe, erschöpftes Kontingent, fehlende DFBnet-Haken), geht auch keine Nachricht raus.",
+          "Im Reiter „Einstellungen“ steht die aufklappbare Liste „Wer wird über neue Anfragen benachrichtigt“. Zur Auswahl stehen nur Personen, die eine Anfrage auch entscheiden dürfen — ein Haken bei jemand anderem hätte nichts bewirkt.",
+          "Solange nichts angehakt ist, werden alle Entscheidenden benachrichtigt. Unter der Liste steht, was der aktuelle Stand bedeutet. Die Auswahl kann den Kreis nur verkleinern; wer sein Bearbeiten-Recht verliert, bekommt automatisch keine Meldung mehr.",
+          "Die Rückmeldung an den anfragenden Trainer ist davon nicht betroffen: die geht immer an ihn."
         ]
       },
       {
