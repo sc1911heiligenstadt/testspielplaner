@@ -1,28 +1,23 @@
-# Testspielplaner
+# 🆚 Testspielplaner
 
-Planungstool des 1. SC 1911 e.V. Heilbad Heiligenstadt für **Testspiele und
-Leistungsvergleiche**: Trainer reservieren sich konkrete Platz-Termine (auch
-ohne feststehenden Gegner), ein Admin genehmigt, der Gegner wird nachgetragen.
+Testspiele und Leistungsvergleiche planen: Termin anfragen, Admin genehmigt nach DFBnet-Eintragung, Gegner wird nachgetragen — mit Saison-Kontingent je Trainer.
 
-## Funktionen
+**➡️ [Testspielplaner öffnen](https://sc1911heiligenstadt.github.io/testspielplaner/)**
 
-- **Slot-Suche über einen Zeitraum** („Montag bis Donnerstag ginge") — freie
-  Lücken je Platz und Tag als klickbare Vorschläge, inklusive read-only
-  Abgleich mit dem Trainings-Wochenplan der Platzbelegung-App.
-- **Testspiel**: Datum, Uhrzeit, Platz, Feldgröße (Großfeld / verkürztes
-  Großfeld / Halbfeld), Gegner optional.
-- **Leistungsvergleich**: zusätzlich Anzahl Spiele und Minuten pro Spiel.
-- **Genehmigungs-Workflow**: angefragt → genehmigt/abgelehnt (Admin) →
-  vereinbart (Trainer trägt Gegner ein) bzw. freigegeben (Platz wieder frei).
-- **Saison-Kontingent** je Trainer (01.07.–30.06., admin-einstellbar).
-- **Erinnerung**, wenn ein genehmigter Termin in den nächsten 14 Tagen noch
-  keinen Gegner hat.
-- Plätze admin-editierbar (Name, aktiv, Feldgrößen, Platzbelegung-Zuordnung).
+## Zugang
 
-## Architektur
+Die Anmeldung läuft über die [Tools-Übersicht](https://sc1911heiligenstadt.github.io/ToolsUebersicht/) — dort einmal anmelden, danach ist dieses Werkzeug offen.
 
-Vanilla-JS-App ohne Build-Step. Anmeldung und Speicherung laufen über das
-zentrale Login-Gateway der
-[Tools-Übersicht](https://sc1911heiligenstadt.github.io/ToolsUebersicht/)
-(Cloudflare Worker → Vereins-Nextcloud, eine JSON-Datei). Kein Passwort und
-keine Zugangsdaten auf dem Gerät.
+Die Rechte gelten in drei Stufen: **Sehen** (nur ansehen), **Bearbeiten** (Einträge pflegen) und **Administrieren** (Einstellungen und Verwaltung). Wer welche Stufe hat, legt die Tools-Übersicht fest.
+
+## Lokal starten
+
+Über den Eintrag `testspielplaner` in `E:\.claude\launch.json` — der Server läuft dann auf `http://localhost:8785/`.
+
+## Technik
+
+Vanilla JavaScript ohne Build-Schritt — die Dateien werden so ausgeliefert, wie sie im Repo liegen. Veröffentlicht über GitHub Pages. Die Daten liegen in der Vereins-Nextcloud; der Zugriff läuft ausschließlich über den Login-Worker der Tools-Übersicht, nie mit Zugangsdaten im Browser.
+
+---
+
+Ein Werkzeug des 1. SC 1911 Heiligenstadt. Alle Werkzeuge auf einen Blick: [Tools-Übersicht](https://sc1911heiligenstadt.github.io/ToolsUebersicht/) · Erklärungen im [Toolbox Wiki](https://sc1911heiligenstadt.github.io/Vereinswiki/).
