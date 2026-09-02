@@ -28,40 +28,28 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
-    version: "1.2",
-    groups: [
-      {
-        title: "Der Reiter „Info“ erklärt jetzt, was die App wirklich tut",
-        items: [
-          "Dort stand bisher ein einzelner Satz. Jetzt steht da, wofür die einzelnen Reiter da sind, was die App mit den Eingaben macht und wo etwas anderes hingehört.",
-          "Am Funktionsumfang ändert sich nichts — nur an der Beschreibung."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.1",
-    groups: [
-      {
-        title: "Am Handy",
-        items: [
-          "Bisher brach die Reiterleiste selbst um, die rechte Reiter-Gruppe darin aber nicht: Sie rutschte als ein Stück in die zweite Zeile und lief dort weiter über den rechten Rand hinaus. Jetzt bricht auch sie um, sobald sie zu breit wird. Zu sehen ist das nur, wenn genug Reiter nebeneinanderstehen — bis dahin sieht alles aus wie bisher."
-        ]
-      }
-    ]
-  },
-  {
     version: "1.0",
     groups: [
       {
         title: "Testspiel anfragen",
         items: [
-          "Testspiele und Leistungsvergleiche als konkreten Termin anfragen: Datum, Uhrzeit, Platz und Feldgröße — Großfeld, verkürztes Großfeld oder Halbfeld.",
-          "Der Gegner ist beim Anfragen freiwillig und lässt sich nach der Genehmigung nachtragen.",
+          "Testspiele und Leistungsvergleiche als konkreten Termin anfragen: Datum, Uhrzeit von und bis, Platz und Feldgröße — Großfeld, verkürztes Großfeld oder Halbfeld.",
+          "Die Mannschaft kommt aus dem eigenen Trainerprofil. Wer mehrere betreut, wählt sie aus einer Liste.",
+          "Der Gegner ist beim Anfragen freiwillig und lässt sich nach der Genehmigung nachtragen. Für Ansprechpartner oder Besonderheiten gibt es ein Notizfeld.",
           "Bei Leistungsvergleichen kommen Anzahl der Spiele und Minuten je Spiel dazu.",
           "Überschneidet sich die Anfrage mit einer bestehenden Reservierung desselben Platzes, warnt die App.",
           "Je Trainer gibt es ein Saison-Kontingent für Testspiele und Leistungsvergleiche zusammen; die Saison läuft vom 1. Juli bis 30. Juni. Der eigene Verbrauch steht sichtbar dabei.",
+          "Eine noch nicht entschiedene Anfrage lässt sich zurückziehen.",
           "Hat ein genehmigter Termin 14 Tage vorher noch keinen Gegner, erinnert das Werkzeug daran — im Tool und auf dem Dashboard der Tools-Übersicht. Dann heißt es: Gegner eintragen oder Platz freigeben."
+        ]
+      },
+      {
+        title: "Der Weg einer Reservierung",
+        items: [
+          "Eine Reservierung trägt eines von fünf Kennzeichen: „Angefragt“, „Genehmigt“, „Vereinbart“, „Abgelehnt“ und „Freigegeben“.",
+          "Sobald der Gegner feststeht, setzt der anfragende Trainer die Reservierung selbst auf „vereinbart“.",
+          "Wird ein genehmigter oder vereinbarter Termin doch nicht gebraucht, gibt der Trainer den Platz frei — er steht dann wieder für andere zur Verfügung und zählt nicht mehr gegen das Kontingent.",
+          "Nur angefragte, genehmigte und vereinbarte Termine blockieren einen Platz."
         ]
       },
       {
@@ -69,15 +57,15 @@ const APP_CHANGELOG = [
         items: [
           "Jede Anfrage muss genehmigt oder abgelehnt werden, eine Ablehnung mit Kommentar.",
           "Genehmigt wird erst, wenn beides bestätigt ist: das Spiel ist im DFBnet eingetragen und der Platz ist reserviert. Dafür gibt es zwei Haken je Anfrage.",
-          "Sobald der Gegner feststeht, setzt der anfragende Trainer die Reservierung selbst auf „vereinbart“.",
-          "Alle Reservierungen lassen sich nach Status filtern und als Text oder PDF ausgeben."
+          "Alle Reservierungen lassen sich nach Status filtern und als Text oder PDF ausgeben — ausgegeben wird genau das, was der Filter gerade zeigt.",
+          "Eine Reservierung lässt sich endgültig löschen, wenn sie gar nicht erst hätte entstehen sollen."
         ]
       },
       {
         title: "Plätze und Freigaben",
         items: [
           "Plätze sind pflegbar: Name, aktiv oder stillgelegt, und welche Feldgrößen sie anbieten.",
-          "Trainer-Freigaben als aufklappbare Liste: je Trainer ein Häkchen „darf anfragen“ und ein eigenes Saison-Kontingent.",
+          "Trainer-Freigaben als aufklappbare Liste: je Trainer ein Häkchen „darf anfragen“ und ein eigenes Saison-Kontingent. Bleibt das Kontingent leer, gilt kein Limit.",
           "Wer nicht freigeschaltet ist, sieht im Reiter „Planen“ statt des Formulars einen Hinweis.",
           "Wer in der Tools-Übersicht die Stufe „Administrieren“ für dieses Werkzeug hat, darf immer anfragen — ohne eigene Freigabe-Zeile."
         ]
@@ -98,23 +86,24 @@ const APP_CHANGELOG = [
       {
         title: "Wer darf was",
         items: [
-          "Sehen: die Reservierungen, schreibgeschützt.",
-          "Bearbeiten: Anfragen stellen (sofern freigegeben), Anfragen genehmigen und ablehnen, Reservierungen exportieren.",
-          "Administrieren: zusätzlich Plätze, Trainer-Freigaben und Kontingente im Reiter „Einstellungen“.",
-          "Der Reiter „Info“ ist für alle sichtbar."
+          "Sehen: die eigenen Reservierungen, schreibgeschützt.",
+          "Bearbeiten: Anfragen stellen, sofern man dafür freigeschaltet ist, eigene Anfragen zurückziehen, den Gegner nachtragen und einen Platz wieder freigeben.",
+          "Administrieren: die Reiter „Verwaltung“ und „Einstellungen“ — genehmigen, ablehnen, exportieren, löschen sowie Plätze, Trainer-Freigaben und Kontingente pflegen.",
+          "Der Reiter „Info“ ist für alle sichtbar. Dort stehen eine Kurzbeschreibung, diese Änderungsliste und der Datenschutzhinweis des Vereins."
         ]
       },
       {
         title: "Bedienung am Handy",
         items: [
           "Die Reiterleiste bricht am Handy um, statt seitlich aus dem Bild zu laufen — auch die hinteren Reiter sind auf schmalen Bildschirmen erreichbar.",
-          "Eingabefelder sind mindestens 16 Pixel groß, damit der iPhone-Browser beim Antippen nicht ungefragt in die Seite hineinzoomt und verschoben stehen bleibt."
+          "Eingabefelder sind groß genug, dass der iPhone-Browser beim Antippen nicht ungefragt in die Seite hineinzoomt."
         ]
       },
       {
         title: "Daten & Speicherung",
         items: [
-          "Gespeichert wird in der Vereins-Nextcloud über die zentrale Anmeldung der Tools-Übersicht — ein eigenes Passwort braucht es nicht."
+          "Gespeichert wird in der Vereins-Nextcloud über die zentrale Anmeldung der Tools-Übersicht — ein eigenes Passwort braucht es nicht.",
+          "Ändern zwei Leute gleichzeitig denselben Stand, lädt die App den fremden Stand nach und trägt die eigene Änderung noch einmal ein."
         ]
       }
     ]
