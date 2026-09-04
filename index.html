@@ -69,7 +69,7 @@
         <p class="kontingent-info muted" id="kontingent-info"></p>
         <div class="form-grid">
           <div class="form-field">
-            <label>Art</label>
+            <label for="f-typ">Art</label>
             <select id="f-typ">
               <option value="testspiel" selected>Testspiel</option>
               <option value="leistungsvergleich">Leistungsvergleich</option>
@@ -78,21 +78,21 @@
           <div class="form-field" id="mannschaft-field"></div>
         </div>
         <div class="form-grid">
-          <div class="form-field"><label>Datum</label><input type="date" id="f-datum" /></div>
-          <div class="form-field"><label>Von</label><input type="time" id="f-von" /></div>
-          <div class="form-field"><label>Bis</label><input type="time" id="f-bis" /></div>
+          <div class="form-field"><label for="f-datum">Datum</label><input type="date" id="f-datum" /></div>
+          <div class="form-field"><label for="f-von">Von</label><input type="time" id="f-von" /></div>
+          <div class="form-field"><label for="f-bis">Bis</label><input type="time" id="f-bis" /></div>
         </div>
         <div class="form-grid">
-          <div class="form-field"><label>Feldgröße</label><select id="f-feldgroesse"></select></div>
-          <div class="form-field"><label>Platz</label><select id="f-platz"></select></div>
-          <div class="form-field"><label>Gegner (optional)</label><input type="text" id="f-gegner" placeholder="noch offen — später eintragbar" /></div>
+          <div class="form-field"><label for="f-feldgroesse">Feldgröße</label><select id="f-feldgroesse"></select></div>
+          <div class="form-field"><label for="f-platz">Platz</label><select id="f-platz"></select></div>
+          <div class="form-field"><label for="f-gegner">Gegner (optional)</label><input type="text" id="f-gegner" placeholder="noch offen — später eintragbar" /></div>
         </div>
         <div class="form-grid lv-only">
-          <div class="form-field"><label>Anzahl Spiele</label><input type="number" id="f-anzahl-spiele" min="1" step="1" /></div>
-          <div class="form-field"><label>Minuten pro Spiel</label><input type="number" id="f-minuten" min="1" step="1" /></div>
+          <div class="form-field"><label for="f-anzahl-spiele">Anzahl Spiele</label><input type="number" id="f-anzahl-spiele" min="1" step="1" /></div>
+          <div class="form-field"><label for="f-minuten">Minuten pro Spiel</label><input type="number" id="f-minuten" min="1" step="1" /></div>
         </div>
         <div class="form-field" style="margin-top:4px;">
-          <label>Notiz (optional)</label>
+          <label for="f-notiz">Notiz (optional)</label>
           <textarea id="f-notiz" rows="2" placeholder="z. B. Ansprechpartner beim Gegner, Besonderheiten"></textarea>
         </div>
         <p class="form-warning" id="form-warning" style="display:none;"></p>
