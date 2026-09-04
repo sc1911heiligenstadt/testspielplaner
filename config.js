@@ -28,6 +28,18 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
+    version: "1.1",
+    groups: [
+      {
+        title: "Kontingent-Anzeige zeigt die richtige Saison",
+        items: [
+          "Die Zeile über dem Anfrageformular rechnete das verbrauchte Kontingent immer für die gerade laufende Saison aus — geprüft wird beim Absenden aber die Saison des gewählten Spieltags. In der Sommerpause fiel beides auseinander: die Anzeige meldete rot „5 von 5 verbraucht“, und eine Anfrage für August ging trotzdem durch. Umgekehrt konnte eine Absage kommen, obwohl daneben „0 von 5“ stand.",
+          "Jetzt richtet sich die Anzeige nach dem gewählten Datum und wird beim Ändern des Datums neu berechnet. Ohne gewähltes Datum steht dort weiter die laufende Saison."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.0",
     groups: [
       {

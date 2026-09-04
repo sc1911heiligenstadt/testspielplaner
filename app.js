@@ -219,16 +219,28 @@ function verbrauchtesKontingent(data, username, saisonKey) {
   ).length;
 }
 
+// ⚠️ Die Saison kommt aus dem GEWAEHLTEN Datum, nicht aus dem heutigen. Die
+// Pruefung beim Absenden rechnet gegen saisonKeyOf(datum) -- einmal vor dem
+// Speichern und einmal im mutate-Closure. Stand hier localDateIso(), zeigten
+// Anzeige und Pruefung in der Sommerpause VERSCHIEDENE Saisons: die Anzeige
+// meldete "5 von 5 verbraucht" und faerbte sich rot, waehrend die Anfrage fuer
+// August gegen die neue Saison lief und anstandslos durchging (und umgekehrt).
+// Die Saison springt am 1. Juli -- genau dann werden Testspiele geplant.
+// Ohne gewaehltes Datum bleibt die laufende Saison die richtige Auskunft.
 function renderKontingentInfo() {
   const el = document.getElementById("kontingent-info");
-  const saison = saisonKeyOf(localDateIso());
+  const feld = document.getElementById("f-datum");
+  const saison = saisonKeyOf(feld ? feld.value : "") || saisonKeyOf(localDateIso());
   const limit = kontingentLimit(appData, currentUsername);
   const verbraucht = verbrauchtesKontingent(appData, currentUsername, saison);
+  // Die Einfaerbung in BEIDEN Zweigen setzen: die Funktion laeuft jetzt bei
+  // jeder Datumsaenderung erneut, und ein einmal gesetztes Rot bliebe sonst
+  // stehen, wenn ein Admin das Limit inzwischen entfernt hat.
+  el.classList.toggle("kontingent-voll", limit != null && verbraucht >= limit);
   if (limit == null) {
     el.textContent = `Saison ${saison}: ${verbraucht} Reservierung${verbraucht === 1 ? "" : "en"} — kein Kontingent-Limit gesetzt.`;
   } else {
     el.textContent = `Kontingent Saison ${saison}: ${verbraucht} von ${limit} verbraucht.`;
-    el.classList.toggle("kontingent-voll", verbraucht >= limit);
   }
 }
 
@@ -968,6 +980,10 @@ async function init() {
   ["f-datum", "f-von", "f-bis", "f-platz"].forEach((id) => {
     document.getElementById(id).addEventListener("change", checkFormOverlap);
   });
+  // Das Kontingent haengt an der Saison des SPIELDATUMS -- wechselt das Datum
+  // ueber den 1. Juli, gilt ein anderer Zaehler. Ohne diese Zeile bliebe die
+  // Zeile ueber dem Formular auf der Saison stehen, die beim Seitenstart galt.
+  document.getElementById("f-datum").addEventListener("change", renderKontingentInfo);
   document.getElementById("btn-submit").addEventListener("click", submitReservierung);
 
   document.getElementById("meine-rows").addEventListener("click", (e) => {
