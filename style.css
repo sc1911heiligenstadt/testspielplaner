@@ -65,8 +65,11 @@ nav button.active { color: var(--blue); border-bottom-color: var(--blue); }
 .admin-only { display: none; }
 body.is-admin .admin-only { display: revert; }
 /* Dritte Stufe "Administrieren" (Tools-Übersicht, 2026-07-24): Einstellungen
-   (Plätze + Trainer-Freigaben) nur für body.is-tooladmin (canAdmin) —
-   die Verwaltung (Entscheiden) bleibt an body.is-admin (canEdit). */
+   (Plätze + Trainer-Freigaben) UND die Verwaltung (Entscheiden) hängen an
+   body.is-tooladmin (canAdmin) — beide Reiter tragen .tooladmin-only.
+   ⚠️ Der Kommentar behauptete früher, die Verwaltung bleibe an body.is-admin
+   (canEdit); danach wurde in app.js gegen die falsche Stufe gerendert. Wer die
+   Stufe hier ändert, muss renderAll()/activateTab() in app.js mitändern. */
 .tooladmin-only { display: none; }
 body.is-tooladmin .tooladmin-only { display: revert; }
 

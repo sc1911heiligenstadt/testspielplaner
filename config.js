@@ -28,6 +28,18 @@ const REMINDER_TAGE = 14;
 
 const APP_CHANGELOG = [
   {
+    version: "1.2",
+    groups: [
+      {
+        title: "Der Reiter „Verwaltung“ blieb leer",
+        items: [
+          "Wer das Recht „Administrieren“ nur über eine Gruppe hatte, sah den Reiter „Verwaltung“ zwar, fand darin aber eine leere Karte. Nicht einmal der Hinweis, dass nichts vorliegt, stand da. Es sah aus, als wäre nichts zu tun — dabei lagen Anfragen offen. Gefüllt wurde die Liste nämlich nur für Konten mit globalem Admin-Recht.",
+          "Jetzt füllt sich die Liste für jeden, der den Reiter sehen darf. Sie wird auch beim Wechsel auf den Reiter neu gebaut. Und nach einer Entscheidung steht die Zeile sofort auf dem neuen Stand, statt weiter „Angefragt“ zu zeigen."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.1",
     groups: [
       {

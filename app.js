@@ -908,7 +908,11 @@ function renderAll() {
   renderKontingentInfo();
   renderReminderBanner();
   renderMeineReservierungen();
-  if (currentIsAdmin) renderVerwaltung();
+  // ⚠️ Muss dieselbe Stufe sein, die den Reiter sichtbar macht (.tooladmin-only
+  // = is-tooladmin = currentIsAdmin || currentCanAdmin). Stand vorher auf
+  // currentIsAdmin allein — wer das Administrieren-Recht nur über eine Gruppe
+  // hatte, sah einen leeren Reiter ohne Leermeldung.
+  if (currentIsAdmin || currentCanAdmin) renderVerwaltung();
 }
 
 // ---------- Header / Tabs / Start ----------
@@ -930,6 +934,7 @@ function activateTab(name) {
   document.querySelector(`nav button[data-tab="${name}"]`).classList.add("active");
   document.getElementById("tab-" + name).classList.add("active");
   if (name === "einstellungen") renderEinstellungen();
+  if (name === "verwaltung" && (currentIsAdmin || currentCanAdmin)) renderVerwaltung();
 }
 
 function setupTabs() {
